@@ -1,0 +1,6 @@
+{
+  "mrdetect.plasmabam": "/.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/TGL49_0240_Cf_n_WG_CHM-01-052-T0-P-DNA.filter.deduped.realigned.recalibrated.bam",
+  "mrdetect.plasmabai": "/.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/TGL49_0240_Cf_n_WG_CHM-01-052-T0-P-DNA.filter.deduped.realigned.recalibrated.bai",
+  "mrdetect.tumorvcf": "/.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/TGL49_0240_Cf_n_TS_91600-052.all.unique.dcs.sorted.mutect2.tumor_only.filtered.vcf.gz"
+}
+

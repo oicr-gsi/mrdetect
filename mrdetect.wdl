@@ -3,22 +3,22 @@ version 1.0
 workflow mrdetect {
 	input {
 		File plasmabam 
-		File plasmabai
+		File plasmabai 
 		File tumorvcf
 		String plasmabasename = basename("~{plasmabam}", ".bam")
 	}
 
 	parameter_meta {
 		plasmabam: "plasma input .bam file"
-		plasmabai: "plasma input .bam file"
+		plasmabai: "plasma input .bai file"
 		tumorvcf: "tumor vcf file"
 		plasmabasename: "Base name for plasma"
 	}
 
 	call detectSNVs {
 		input: 
-		plasmabam = plasmabam 
-		plasmabai = plasmabai
+		plasmabam = plasmabam, 
+		plasmabai = plasmabai, 
 		tumorvcf = tumorvcf
 	}
 
@@ -35,6 +35,10 @@ workflow mrdetect {
 			{
 				name: "bcftools/1.9",
 				url: "https://github.com/samtools/bcftools"
+			},
+			{
+				name: "tabix/1.9",
+				url: "http://www.htslib.org/doc/tabix.html"
 			}
 		]
 		output_meta: {
@@ -49,11 +53,11 @@ workflow mrdetect {
 task detectSNVs {
 	input {
 		File plasmabam 
-		File plasmabai
+		File plasmabai 
 		File tumorvcf
 		String tumorbasename = basename("~{tumorvcf}", ".vcf.gz")
 		String plasmabasename = basename("~{plasmabam}", ".bam")
-		String modules = "mrdetect/1.0 bcftools/1.9"
+		String modules = "mrdetect/1.0 bcftools/1.9 tabix/1.9"
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
@@ -76,13 +80,13 @@ task detectSNVs {
 
 		$BCFTOOLS_ROOT/bin/bcftools view \
 			-f 'PASS,clustered_events' \
-			-v snps ~{tumorbasename}.vcf.gz  | \
+			-v snps ~{tumorvcf}  | \
 		$BCFTOOLS_ROOT/bin/bcftools filter \
-			-i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= 0.05" >~{tumorbasename}.SNP.actuallyFiltered.vcf.gz
+			-i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= 0.05" >~{tumorbasename}.SNP.actuallyFiltered.vcf
 
 		$MRDETECT_ROOT/bin/pull_reads \
 			--bam ~{plasmabam} \
-			--vcf ~{tumorbasename}.SNP.actuallyFiltered.vcf.gz \
+			--vcf ~{tumorbasename}.SNP.actuallyFiltered.vcf \
 			--out ~{plasmabasename}_PLASMA_VS_TUMOR
 
 		$MRDETECT_ROOT/bin/quality_score \
@@ -91,11 +95,11 @@ task detectSNVs {
 			--output_file ~{plasmabasename}_PLASMA_VS_TUMOR.svm.tsv
 
 		cp $MRDETECT_ROOT/MRDetect-master/MRDetectSNV/blacklist.txt.gz ./blacklist.txt.gz
-		
+
 		$MRDETECT_ROOT/bin/filterAndDetect \
-		 	~{tumorbasename}.SNP.actuallyFiltered.vcf.gz \
-		 	~{plasmabasename}_PLASMA_VS_TUMOR.svm.tsv \
-		 	~{plasmabasename}_PLASMA_VS_TUMOR_RESULT.csv
+			~{tumorbasename}.SNP.actuallyFiltered.vcf \
+			~{plasmabasename}_PLASMA_VS_TUMOR.svm.tsv \
+			~{plasmabasename}_PLASMA_VS_TUMOR_RESULT.csv
 
 	>>>
 
