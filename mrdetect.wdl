@@ -6,6 +6,7 @@ workflow mrdetect {
 		File plasmabai 
 		File tumorvcf
 		String plasmabasename = basename("~{plasmabam}", ".bam")
+		String bedIntervalsPath 
 	}
 
 	parameter_meta {
@@ -13,6 +14,7 @@ workflow mrdetect {
 		plasmabai: "plasma input .bai file"
 		tumorvcf: "tumor vcf file"
 		plasmabasename: "Base name for plasma"
+		bedIntervalsPath: "bed intervals path"
 	}
 
 	call detectSNVs {
@@ -20,6 +22,21 @@ workflow mrdetect {
 		plasmabam = plasmabam, 
 		plasmabai = plasmabai, 
 		tumorvcf = tumorvcf
+	}
+
+	call expandRegions { 
+		input: 
+		bedPath = bedIntervalsPath 
+	}
+
+	Array[String] splitRegions = expandRegions.regions
+
+	scatter ( r in splitRegions )   {
+  		call DepthOfCoverage { 
+			plasmabam = plasmabam, 
+			plasmabai = plasmabai, 
+  			region = r 
+  		}
 	}
 
 	meta {
@@ -49,6 +66,46 @@ workflow mrdetect {
 		File snvDetectionFinalResult = "~{plasmabasename}_PLASMA_VS_TUMOR_RESULT.csv"
 	}
 }
+
+task expandRegions {
+	input {
+	 String bedPath = ""
+	 Int jobMemory = 4
+	 Int timeout = 12
+	}
+
+	parameter_meta {
+	  bedPath: "Optional path to a bed file with intervals"
+	  jobMemory: "Memory for this task in GB"
+	  modules: "required modules (This is to allow modularized data for bed path)" 
+	  timeout: "Timeout in hours, needed to override imposed limits"
+	}
+
+	command <<<
+	 python <<CODE
+	 import os
+	 if os.path.exists("~{bedPath}"):
+	    with open("~{bedPath}") as f:
+	        for line in f:
+	           line = line.rstrip()
+	           tmp = line.split("\t")
+	           r = tmp[0] + ":" + tmp[1] + "-" + tmp[2]
+	           print(r)
+	    f.close()
+	 CODE
+	>>>
+
+	runtime {
+	 memory:  "~{jobMemory} GB"
+	 modules: "~{modules}"
+	 timeout: "~{timeout}"
+	}
+
+	output {
+	 Array[String] regions = read_lines(stdout()) 
+	}
+}
+
 
 task detectSNVs {
 	input {
@@ -118,7 +175,66 @@ task detectSNVs {
 	meta {
 		output_meta: {
 			snvDetectionFinalResult: "Final result and call from SNV detection",
-			snvDetectionReadsScored: "Reads with potential for tumor, with their scores",
+			snvDetectionReadsScored: "Reads with potential for tumor, with their scores"
+		}
+	}
+}
+
+task DepthOfCoverage {
+	input {
+		File plasmabam 
+		File plasmabai 
+		String plasmabasename = basename("~{plasmabam}", ".bam")
+		String modules = "mrdetect/1.0 hg38/p12"
+		String ref = "$HG38_ROOT/hg38_random.fa"
+		Int jobMemory = 64
+		Int threads = 4
+		Int timeout = 10
+		String region 
+	}
+
+	parameter_meta {
+		plasmabam: "plasma input .bam file"
+		plasmabai: "plasma input .bam file"
+		plasmabasename: "Base name for plasma"
+		modules: "Required environment modules"
+		ref: "Genome Reference"
+		jobMemory: "Memory allocated for this job (GB)"
+		threads: "Requested CPU threads"
+		timeout: "Hours before task timeout"
+		region: "Region in form chrX:12000-12500"
+	}
+
+	command <<<
+		set -euo pipefail
+
+		java -Xmx24576m -jar $GATK_ROOT/GenomeAnalysisTK.jar \
+			-T DepthOfCoverage \
+			--includeDeletions \
+			--read_filter BadCigar \
+			--summaryCoverageThreshold 100 \
+			--intervals ~{region} \
+			--interval_merging OVERLAPPING_ONLY \
+			-R ~{ref} \
+			-I ~{plasmabam} \
+			-o ~{plasmabasename}.~{region}.DepthOfCoverage
+
+	>>>
+
+	runtime {
+		modules: "~{modules}"
+		memory:  "~{jobMemory} GB"
+		cpu:     "~{threads}"
+		timeout: "~{timeout}"
+	}
+
+	output {
+		File DepthOfCoverageOut = "~{plasmabasename}.~{region}.DepthOfCoverage"
+	}
+
+	meta {
+		output_meta: {
+			DepthOfCoverageOut: "Depth of Coverage output for interval"
 		}
 	}
 }
