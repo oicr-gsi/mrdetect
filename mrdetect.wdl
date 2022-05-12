@@ -22,8 +22,8 @@ workflow mrdetect {
 		tumorvcf: "tumor vcf file"
 		plasmabasename: "Base name for plasma"
 		segFile: "segments file, eg from sequenza "
-		plasmaSampleName: "plasma sample Name"
-		normalSampleName: "normal/reference sample Name"
+		plasmaSampleName: "plasma sample name"
+		normalSampleName: "normal/reference sample name"
 		window: "window size for scanning within intervals"
 	}
 
@@ -129,6 +129,10 @@ task detectSNVs {
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
+		String normalVCFfilter = "PASS,clustered_events"
+		String normalVAF = "0.05"
+		String pickle = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/trained_SVM.pkl"
+		String blacklist = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/blacklist.txt.gz"
 	}
 
 	parameter_meta {
@@ -141,16 +145,20 @@ task detectSNVs {
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
 		timeout: "Hours before task timeout"
+		normalVCFfilter: "set of filter calls to incl. in normal VCF (any line with these flags will be included"
+		normalVAF: "Variant Allele Frequency for normal VCF"
+		pickle: "trained pickle for detecting real tumor reads"
+		blacklist: "list of sites to exclude from analysis, gzipped"
 	}
 
 	command <<<
 		set -euo pipefail
 
 		$BCFTOOLS_ROOT/bin/bcftools view \
-			-f 'PASS,clustered_events' \
+			-f '~{normalVCFfilter}' \
 			-v snps ~{tumorvcf}  | \
 		$BCFTOOLS_ROOT/bin/bcftools filter \
-			-i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= 0.05" >~{tumorbasename}.SNP.actuallyFiltered.vcf
+			-i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{normalVAF}" >~{tumorbasename}.SNP.actuallyFiltered.vcf
 
 		$MRDETECT_ROOT/bin/pull_reads \
 			--bam ~{plasmabam} \
@@ -158,11 +166,11 @@ task detectSNVs {
 			--out ~{plasmabasename}_PLASMA_VS_TUMOR
 
 		$MRDETECT_ROOT/bin/quality_score \
-			--pickle-name $MRDETECT_ROOT/MRDetect-master/MRDetectSNV/trained_SVM.pkl \
+			--pickle-name ~{pickle} \
 			--detections ~{plasmabasename}_PLASMA_VS_TUMOR.tsv \
 			--output_file ~{plasmabasename}_PLASMA_VS_TUMOR.svm.tsv
 
-		cp $MRDETECT_ROOT/MRDetect-master/MRDetectSNV/blacklist.txt.gz ./blacklist.txt.gz
+		cp ~{blacklist} ./blacklist.txt.gz
 
 		$MRDETECT_ROOT/bin/filterAndDetect \
 			~{tumorbasename}.SNP.actuallyFiltered.vcf \
@@ -200,7 +208,12 @@ task segTObed {
 		Int timeout = 12
 	}
 	parameter_meta{
-
+		segFile: "segments file, eg from sequenza"
+		segFileLoc: "segments file location as string, for R intake"
+		basename: "Base name for segment file"
+		jobMemory: "Memory allocated for this job (GB)"
+		threads: "Requested CPU threads"
+		timeout: "Hours before task timeout"
 	}
 	command <<<
 		R <<CODE
@@ -243,6 +256,7 @@ task expandRegions {
 
 	parameter_meta {
 		bedIntervals: "bed file with intervals"
+		bedIntervalsLoc: "bed file location as string, for python intake"
 		jobMemory: "Memory for this task in GB"
 		timeout: "Timeout in hours, needed to override imposed limits"
 	}
@@ -274,8 +288,6 @@ task expandRegions {
 	}
 }
 
-
-
 task DepthOfCoverage {
 	input {
 		File inputbam
@@ -284,8 +296,8 @@ task DepthOfCoverage {
 		String region
 		String interval
 		String CNVcall
-		String modules = "mrdetect/1.0 hg38/p12"
 		String ref = "$HG38_ROOT/hg38_random.fa"
+		String modules = "mrdetect/1.0 hg38/p12"
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
@@ -294,15 +306,15 @@ task DepthOfCoverage {
 	parameter_meta {
 		inputbam: " input .bam file"
 		inputbai: " input .bam file"
+		sampleName: "sample Name"
+		region: "Region in form chrX:12000-12500"
+		interval: "Region in form chrX_12000_12500"
+		CNVcall: "DUP, DEL or NEU"
 		modules: "Required environment modules"
 		ref: "Genome Reference"
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
 		timeout: "Hours before task timeout"
-		region: "Region in form chrX:12000-12500"
-		interval: "Region in form chrX_12000_12500"
-		CNVcall: "DUP, DEL or NEU"
-		sampleName: "sample Name"
 	}
 
 	command <<<
@@ -345,18 +357,18 @@ task calculateMedians {
 	input {
 		Array[File] depthOfCoverages
 		String sampleName
+		Int window
 		File bedIntervals
 		String modules = "mrdetect/1.0 hg38/p12"
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
-		Int window
 	}
 
 	parameter_meta {
-		window: "window size for scanning within intervals"
-		sampleName: "sample Name"
 		depthOfCoverages: "depth of coverage in plasma for each segment"
+		sampleName: "sample Name"
+		window: "window size for scanning within intervals"
 		bedIntervals: "bed file with intervals"
 		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
@@ -401,25 +413,25 @@ task calculateMedians {
 
 	meta {
 		output_meta: {
-			delsdupsMedian: "Median depth of coverage for deletions and duplicates in plasma",
-			neuMedian: "Median depth of coverage for neutral segments in plasma"
+			delsdupsMedian: "Median depth of coverage for deletions and duplicates",
+			neuMedian: "Median depth of coverage for neutral segments"
 		}
 	}
 }
 
 task detectCNAs {
 	input {
-		Float? median_thresh = 1.5
+		File plasmaCNVMedians
+		File normalCNVMedians
+		File plasmaNEUMedians
+		File normalNEUMedians
+		String normalSampleName
+		String plasmaSampleName
 		Int tumor_coverage 
 		Int normal_coverage
 		Int window
+		Float? median_thresh = 1.5
 		String? interval_name = "interval"
-		File normalCNVMedians
-		File normalNEUMedians
-		File plasmaCNVMedians
-		File plasmaNEUMedians
-		String normalSampleName
-		String plasmaSampleName
 		String modules = "mrdetect/1.0 hg38/p12"
 		Int jobMemory = 64
 		Int threads = 4
@@ -427,17 +439,17 @@ task detectCNAs {
 	}
 
 	parameter_meta {
-		window: "window size for scanning within intervals"
-		normal_coverage: "mean coverage in normal, for normalization"
-		tumor_coverage: "mean coverage in tumor, for normalization"
-		median_thresh: "median threshold, removed bins with extreme coverage values (>abs(1.5*median))"
-		interval_name: "name for interval"
 		plasmaCNVMedians: "Median depth of coverage for deletions and duplicates in plasma"
 		normalCNVMedians: "Median depth of coverage for deletions and duplicates in normal"
 		plasmaNEUMedians: "Median depth of coverage for neutral segments in plasma"
 		normalNEUMedians: "Median depth of coverage for neutral segments in normal"
-		plasmaSampleName: "plasma sample Name"
 		normalSampleName: "normal sample Name"
+		plasmaSampleName: "plasma sample Name"
+		tumor_coverage: "mean coverage in tumor, for normalization"
+		normal_coverage: "mean coverage in normal, for normalization"
+		window: "window size for scanning within intervals"
+		median_thresh: "median threshold, removed bins with extreme coverage values (>abs(1.5*median))"
+		interval_name: "name for interval"
 		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
@@ -470,7 +482,7 @@ task detectCNAs {
 
 	meta {
 		output_meta: {
-			delsdupsZscore: "Z-score for detection of deletions and duplicates",
+			delsdupsZscore: "Z-score for detection of deletions and duplicates"
 		}
 	}
 }
