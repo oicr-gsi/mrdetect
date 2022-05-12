@@ -68,7 +68,7 @@ workflow mrdetect {
 	call calculateMedians as plasmaMedians {
 		input:
 		depthOfCoverages = select_all(plasmaDepth.DepthOfCoverageOut),
-		bedIntervals = bedIntervals,
+		bedIntervals = segTObed.bedFile,
 		sampleName = plasmaSampleName,
 		window = window
 	}
@@ -76,7 +76,7 @@ workflow mrdetect {
 	call calculateMedians as normalMedians {
 		input:
 		depthOfCoverages = select_all(normalDepth.DepthOfCoverageOut),
-		bedIntervals = bedIntervals,
+		bedIntervals = segTObed.bedFile,
 		sampleName = normalSampleName,
 		window = window
 	}
@@ -202,47 +202,36 @@ task detectSNVs {
 task segTObed {
 	input {
 		File segFile
+		String segTObedrScript
 		String segFileLoc = "~{segFile}"
 		String basename = basename("~{segFile}", ".seg")
 		Int jobMemory = 4
 		Int timeout = 12
+		String modules = "rstats/4.0"
 	}
 	parameter_meta{
 		segFile: "segments file, eg from sequenza"
 		segFileLoc: "segments file location as string, for R intake"
 		basename: "Base name for segment file"
 		jobMemory: "Memory allocated for this job (GB)"
-		threads: "Requested CPU threads"
 		timeout: "Hours before task timeout"
+		modules: "Required environment modules"
+		segTObedrScript: "seg to bed R script location"
 	}
 	command <<<
-		R <<CODE
-		seg <- read.table('~{segFileLoc}')
+		set -euo pipefail
 
-		seg$type <- "NEU"
-		seg$type[seg$seg.mean < -0.3] <- "DEL"
-		seg$type[seg$seg.mean > 0.3] <- "DUP"
-
-		seg <- seg[,c('chrom','loc.start','loc.end','type','seg.mean')]
-		names(seg) <- c("#chr",  "start", "end", "type",  "log2")
-
-		write.table(
-		  seg,
-		  file = "~{basename}.seg.bed",
-		  append = F, quote = FALSE, sep = "\t", 
-		  eol = "\n", na = "NA",dec = ".", row.names = FALSE, 
-		  col.names = TRUE
-		)
-		CODE
+		Rscript --vanilla ~{segTObedrScript} ~{segFileLoc} ~{basename}
 	>>>
 
 	runtime {
+		modules: "~{modules}"
 		memory:  "~{jobMemory} GB"
 		timeout: "~{timeout}"
 	}
 
 	output {
-		File bedFile = ~{basename}.seg.bed 
+		File bedFile = "~{basename}.seg.bed"
 	}
 }
 
