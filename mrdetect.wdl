@@ -4,26 +4,26 @@ workflow mrdetect {
 	input {
 		File plasmabam 
 		File plasmabai 
-		File normalbam 
-		File normalbai 
+		File controlbam 
+		File controlbai 
 		File tumorvcf
 		String plasmabasename = basename("~{plasmabam}", ".bam")
 		File segFile
 		String plasmaSampleName
-		String normalSampleName
+		String controlSampleName
 		Int window = 500 
 	}
 
 	parameter_meta {
 		plasmabam: "plasma input .bam file"
 		plasmabai: "plasma input .bai file"
-		normalbam: "normal-tissue input .bam file"
-		normalbai: "normal-tissue input .bai file"
+		controlbam: "control (or normal) input .bam file"
+		controlbai: "control (or normal) input .bai file"
 		tumorvcf: "tumor vcf file"
 		plasmabasename: "Base name for plasma"
 		segFile: "segments file, eg from sequenza "
 		plasmaSampleName: "plasma sample name"
-		normalSampleName: "normal/reference sample name"
+		controlSampleName: "control/reference sample name"
 		window: "window size for scanning within intervals"
 	}
 
@@ -54,14 +54,14 @@ workflow mrdetect {
 			CNVcall = r[2],
 			sampleName = plasmaSampleName
   		}
-  		call DepthOfCoverage as normalDepth {
+  		call DepthOfCoverage as controlDepth {
 			input:
-			inputbam = normalbam,
-			inputbai = normalbai,
+			inputbam = controlbam,
+			inputbai = controlbai,
 			region = r[0],
 			interval = r[1],
 			CNVcall = r[2],
-			sampleName = normalSampleName
+			sampleName = controlSampleName
   		}
 	}
 
@@ -73,21 +73,21 @@ workflow mrdetect {
 		window = window
 	}
 
-	call calculateMedians as normalMedians {
+	call calculateMedians as controlMedians {
 		input:
-		depthOfCoverages = select_all(normalDepth.DepthOfCoverageOut),
+		depthOfCoverages = select_all(controlDepth.DepthOfCoverageOut),
 		bedIntervals = segTObed.bedFile,
-		sampleName = normalSampleName,
+		sampleName = controlSampleName,
 		window = window
 	}
 
 	call detectCNAs {
 		input:
-		normalCNVMedians = normalMedians.delsdupsMedian,
-		normalNEUMedians = normalMedians.neuMedian,
+		controlCNVMedians = controlMedians.delsdupsMedian,
+		controlNEUMedians = controlMedians.neuMedian,
 		plasmaCNVMedians = plasmaMedians.delsdupsMedian,
 		plasmaNEUMedians = plasmaMedians.neuMedian,
-		normalSampleName = normalSampleName,
+		controlSampleName = controlSampleName,
 		plasmaSampleName = plasmaSampleName,
 		window = window
 	}
@@ -114,7 +114,7 @@ workflow mrdetect {
 	}
 	output {
 		File snvDetectionFinalResult = "~{plasmabasename}_PLASMA_VS_TUMOR_RESULT.csv"
-		File delsdupsZscore = "~{plasmaSampleName}.~{normalSampleName}.win~{window}.robustZscore.delsdups.summary.txt"
+		File delsdupsZscore = "~{plasmaSampleName}.~{controlSampleName}.win~{window}.robustZscore.delsdups.summary.txt"
 	}
 }
 
@@ -129,8 +129,8 @@ task detectSNVs {
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
-		String normalVCFfilter = "PASS,clustered_events"
-		String normalVAF = "0.05"
+		String tumorVCFfilter = "PASS,clustered_events"
+		String tumorVAF = "0.05"
 		String pickle = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/trained_SVM.pkl"
 		String blacklist = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/blacklist.txt.gz"
 	}
@@ -145,8 +145,8 @@ task detectSNVs {
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
 		timeout: "Hours before task timeout"
-		normalVCFfilter: "set of filter calls to incl. in normal VCF (any line with these flags will be included"
-		normalVAF: "Variant Allele Frequency for normal VCF"
+		tumorVCFfilter: "set of filter calls to incl. in tumor VCF (any line with these flags will be included"
+		tumorVAF: "Variant Allele Frequency for tumor VCF"
 		pickle: "trained pickle for detecting real tumor reads"
 		blacklist: "list of sites to exclude from analysis, gzipped"
 	}
@@ -155,10 +155,10 @@ task detectSNVs {
 		set -euo pipefail
 
 		$BCFTOOLS_ROOT/bin/bcftools view \
-			-f '~{normalVCFfilter}' \
+			-f '~{tumorVCFfilter}' \
 			-v snps ~{tumorvcf}  | \
 		$BCFTOOLS_ROOT/bin/bcftools filter \
-			-i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{normalVAF}" >~{tumorbasename}.SNP.actuallyFiltered.vcf
+			-i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" >~{tumorbasename}.SNP.actuallyFiltered.vcf
 
 		$MRDETECT_ROOT/bin/pull_reads \
 			--bam ~{plasmabam} \
@@ -411,13 +411,13 @@ task calculateMedians {
 task detectCNAs {
 	input {
 		File plasmaCNVMedians
-		File normalCNVMedians
+		File controlCNVMedians
 		File plasmaNEUMedians
-		File normalNEUMedians
-		String normalSampleName
+		File controlNEUMedians
+		String controlSampleName
 		String plasmaSampleName
-		Int tumor_coverage 
-		Int normal_coverage
+		Int plasma_coverage 
+		Int control_coverage
 		Int window
 		Float? median_thresh = 1.5
 		String? interval_name = "interval"
@@ -429,13 +429,13 @@ task detectCNAs {
 
 	parameter_meta {
 		plasmaCNVMedians: "Median depth of coverage for deletions and duplicates in plasma"
-		normalCNVMedians: "Median depth of coverage for deletions and duplicates in normal"
+		controlCNVMedians: "Median depth of coverage for deletions and duplicates in control (normal)"
 		plasmaNEUMedians: "Median depth of coverage for neutral segments in plasma"
-		normalNEUMedians: "Median depth of coverage for neutral segments in normal"
-		normalSampleName: "normal sample Name"
+		controlNEUMedians: "Median depth of coverage for neutral segments in control (normal)"
+		controlSampleName: "control sample Name"
 		plasmaSampleName: "plasma sample Name"
-		tumor_coverage: "mean coverage in tumor, for normalization"
-		normal_coverage: "mean coverage in normal, for normalization"
+		plasma_coverage: "mean coverage in plasma, for normalization"
+		control_coverage: "mean coverage in control, for normalization"
 		window: "window size for scanning within intervals"
 		median_thresh: "median threshold, removed bins with extreme coverage values (>abs(1.5*median))"
 		interval_name: "name for interval"
@@ -448,14 +448,14 @@ task detectCNAs {
 	command <<<
 		set -euo pipefail
 
-		mkdir input input/~{normalSampleName} input/~{normalSampleName}/~{interval_name} input/~{normalSampleName}/~{interval_name}/segments input/~{plasmaSampleName} input/~{plasmaSampleName}/~{interval_name} input/~{plasmaSampleName}/~{interval_name}/segments output
+		mkdir input input/~{controlSampleName} input/~{controlSampleName}/~{interval_name} input/~{controlSampleName}/~{interval_name}/segments input/~{plasmaSampleName} input/~{plasmaSampleName}/~{interval_name} input/~{plasmaSampleName}/~{interval_name}/segments output
 
-		ln -s ~{normalCNVMedians} ~{normalNEUMedians} input/~{normalSampleName}/~{interval_name}/segments
+		ln -s ~{controlCNVMedians} ~{controlNEUMedians} input/~{controlSampleName}/~{interval_name}/segments
 		ln -s ~{plasmaCNVMedians} ~{plasmaNEUMedians} input/~{plasmaSampleName}/~{interval_name}/segments
 
-		$MRDETECT_ROOT/bin/parsemedian_robustZscore -i input -t ~{plasmaSampleName} -n ~{normalSampleName} -in ~{interval_name} -o output -w ~{window} -mt ~{median_thresh} -tc ~{tumor_coverage}  -nc ~{normal_coverage}
+		$MRDETECT_ROOT/bin/parsemedian_robustZscore -i input -t ~{plasmaSampleName} -n ~{controlSampleName} -in ~{interval_name} -o output -w ~{window} -mt ~{median_thresh} -tc ~{plasma_coverage} -nc ~{control_coverage}
 
-		cp output/~{plasmaSampleName}.~{normalSampleName}.win~{window}.robustZscore.delsdups.summary.txt ~{plasmaSampleName}.~{normalSampleName}.win~{window}.robustZscore.delsdups.summary.txt
+		cp output/~{plasmaSampleName}.~{controlSampleName}.win~{window}.robustZscore.delsdups.summary.txt ~{plasmaSampleName}.~{controlSampleName}.win~{window}.robustZscore.delsdups.summary.txt
 	>>>
 
 	runtime {
@@ -466,7 +466,7 @@ task detectCNAs {
 	}
 
 	output {
-		File delsdupsZscore = "~{plasmaSampleName}.~{normalSampleName}.win~{window}.robustZscore.delsdups.summary.txt"
+		File delsdupsZscore = "~{plasmaSampleName}.~{controlSampleName}.win~{window}.robustZscore.delsdups.summary.txt"
 	}
 
 	meta {
