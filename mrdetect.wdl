@@ -4,13 +4,14 @@ workflow mrdetect {
 	input {
 		File plasmabam 
 		File plasmabai 
-		File controlbam 
-		File controlbai 
 		File tumorvcf
 		String plasmabasename = basename("~{plasmabam}", ".bam")
-		File segFile
+		Boolean CNVtest
 		String plasmaSampleName
 		String controlSampleName
+		File segFile
+		File controlbam 
+		File controlbai 
 		Int window = 500 
 	}
 
@@ -25,6 +26,7 @@ workflow mrdetect {
 		plasmaSampleName: "plasma sample name"
 		controlSampleName: "control/reference sample name"
 		window: "window size for scanning within intervals"
+		CNVtest: "should CNV analysis be run?"
 	}
 
 	call detectSNVs {
@@ -34,62 +36,65 @@ workflow mrdetect {
 		tumorvcf = tumorvcf
 	}
 
-	call segTObed {
-		input:
-		segFile = segFile
-	}
+	if(CNVtest == true){
 
-	call expandRegions { 
-		input: 
-		bedIntervals = segTObed.bedFile
-	}
-
-	scatter ( r in expandRegions.regions ) {
-		call DepthOfCoverage as plasmaDepth {
+		call segTObed {
 			input:
-			inputbam = plasmabam,
-			inputbai = plasmabai,
-			region = r[0],
-			interval = r[1],
-			CNVcall = r[2],
-			sampleName = plasmaSampleName
-  		}
-  		call DepthOfCoverage as controlDepth {
+			segFile = segFile
+		}
+
+		call expandRegions { 
+			input: 
+			bedIntervals = segTObed.bedFile
+		}
+
+		scatter ( r in expandRegions.regions ) {
+			call DepthOfCoverage as plasmaDepth {
+				input:
+				inputbam = plasmabam,
+				inputbai = plasmabai,
+				region = r[0],
+				interval = r[1],
+				CNVcall = r[2],
+				sampleName = plasmaSampleName
+	  		}
+	  		call DepthOfCoverage as controlDepth {
+				input:
+				inputbam = controlbam,
+				inputbai = controlbai,
+				region = r[0],
+				interval = r[1],
+				CNVcall = r[2],
+				sampleName = controlSampleName
+	  		}
+		}
+
+		call calculateMedians as plasmaMedians {
 			input:
-			inputbam = controlbam,
-			inputbai = controlbai,
-			region = r[0],
-			interval = r[1],
-			CNVcall = r[2],
-			sampleName = controlSampleName
-  		}
-	}
+			depthOfCoverages = select_all(plasmaDepth.DepthOfCoverageOut),
+			bedIntervals = segTObed.bedFile,
+			sampleName = plasmaSampleName,
+			window = window
+		}
 
-	call calculateMedians as plasmaMedians {
-		input:
-		depthOfCoverages = select_all(plasmaDepth.DepthOfCoverageOut),
-		bedIntervals = segTObed.bedFile,
-		sampleName = plasmaSampleName,
-		window = window
-	}
+		call calculateMedians as controlMedians {
+			input:
+			depthOfCoverages = select_all(controlDepth.DepthOfCoverageOut),
+			bedIntervals = segTObed.bedFile,
+			sampleName = controlSampleName,
+			window = window
+		}
 
-	call calculateMedians as controlMedians {
-		input:
-		depthOfCoverages = select_all(controlDepth.DepthOfCoverageOut),
-		bedIntervals = segTObed.bedFile,
-		sampleName = controlSampleName,
-		window = window
-	}
-
-	call detectCNAs {
-		input:
-		controlCNVMedians = controlMedians.delsdupsMedian,
-		controlNEUMedians = controlMedians.neuMedian,
-		plasmaCNVMedians = plasmaMedians.delsdupsMedian,
-		plasmaNEUMedians = plasmaMedians.neuMedian,
-		controlSampleName = controlSampleName,
-		plasmaSampleName = plasmaSampleName,
-		window = window
+		call detectCNAs {
+			input:
+			controlCNVMedians = controlMedians.delsdupsMedian,
+			controlNEUMedians = controlMedians.neuMedian,
+			plasmaCNVMedians = plasmaMedians.delsdupsMedian,
+			plasmaNEUMedians = plasmaMedians.neuMedian,
+			controlSampleName = controlSampleName,
+			plasmaSampleName = plasmaSampleName,
+			window = window
+		}
 	}
 
 	meta {
@@ -114,7 +119,7 @@ workflow mrdetect {
 	}
 	output {
 		File snvDetectionFinalResult = "~{plasmabasename}_PLASMA_VS_TUMOR_RESULT.csv"
-		File delsdupsZscore = "~{plasmaSampleName}.~{controlSampleName}.win~{window}.robustZscore.delsdups.summary.txt"
+		File? delsdupsZscore = "~{plasmaSampleName}.~{controlSampleName}.win~{window}.robustZscore.delsdups.summary.txt"
 	}
 }
 
@@ -123,22 +128,25 @@ task detectSNVs {
 		File plasmabam 
 		File plasmabai 
 		File tumorvcf
+		String vcftumorsample
 		String tumorbasename = basename("~{tumorvcf}", ".vcf.gz")
 		String plasmabasename = basename("~{plasmabam}", ".bam")
 		String modules = "mrdetect/1.0 bcftools/1.9"
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
-		String tumorVCFfilter = "PASS,clustered_events"
-		String tumorVAF = "0.05"
+		String tumorVCFfilter 
+		String tumorVAF = "0.01"
 		String pickle = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/trained_SVM.pkl"
 		String blacklist = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/blacklist.txt.gz"
+		String genome
 	}
 
 	parameter_meta {
 		plasmabam: "plasma input .bam file"
 		plasmabai: "plasma input .bam file"
 		tumorvcf: "tumor vcf file"
+		tumorvcf: "name of tumor sample in vcf"
 		tumorbasename: "Base name for tumor"
 		plasmabasename: "Base name for plasma"
 		modules: "Required environment modules"
@@ -149,16 +157,18 @@ task detectSNVs {
 		tumorVAF: "Variant Allele Frequency for tumor VCF"
 		pickle: "trained pickle for detecting real tumor reads"
 		blacklist: "list of sites to exclude from analysis, gzipped"
+		genome: "Path to loaded genome .fa"
 	}
 
 	command <<<
 		set -euo pipefail
 
-		$BCFTOOLS_ROOT/bin/bcftools view \
-			-f '~{tumorVCFfilter}' \
-			-v snps ~{tumorvcf}  | \
-		$BCFTOOLS_ROOT/bin/bcftools filter \
-			-i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" >~{tumorbasename}.SNP.actuallyFiltered.vcf
+		$BCFTOOLS_ROOT/bin/bcftools view -s ~{vcftumorsample} ~{tumorvcf} |\
+		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome} |\
+		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
+		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
+		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" >~{tumorbasename}.SNP.actuallyFiltered.vcf
+
 
 		$MRDETECT_ROOT/bin/pull_reads \
 			--bam ~{plasmabam} \
