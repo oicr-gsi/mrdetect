@@ -5,13 +5,13 @@ workflow mrdetect {
 		File plasmabam 
 		File plasmabai 
 		File tumorvcf
-		String plasmabasename = basename("~{plasmabam}", ".bam")
-		Boolean CNVtest
-		String plasmaSampleName
-		String controlSampleName
-		File segFile
 		File controlbam 
 		File controlbai 
+		String plasmabasename = basename("~{plasmabam}", ".bam")
+		String plasmaSampleName
+		String controlSampleName
+		Boolean CNVtest
+		File? segFile
 		Int window = 500 
 	}
 
