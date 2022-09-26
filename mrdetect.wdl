@@ -152,18 +152,18 @@ task detectSNVs {
 		File plasmabam 
 		File plasmabai 
 		File tumorvcf
-		String vcftumorsample
 		String tumorbasename = basename("~{tumorvcf}", ".filter.deduped.realigned.recalibrated.mutect2.filtered.vcf.gz")
 		String plasmabasename = basename("~{plasmabam}", ".filter.deduped.realigned.recalibrated.bam")
 		String modules = "mrdetect/1.0 bcftools/1.9"
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
-		String tumorVCFfilter 
+		String tumorVCFfilter = "FILTER~'slippage' | FILTER~'weak_evidence' | FILTER~'strand_bias' | FILTER~'position' | FILTER~'normal_artifact' | FILTER~'multiallelic' | FILTER~'map_qual' | FILTER~'germline' | FILTER~'fragment' | FILTER~'contamination' | FILTER~'base_qual'" 
 		String tumorVAF = "0.01"
 		String pickle = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/trained_SVM.pkl"
 		String blacklist = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/blacklist.txt.gz"
-		String genome
+		String genome = "$HG38_ROOT/hg38_random.fa"
+
 	}
 
 	parameter_meta {
@@ -187,7 +187,7 @@ task detectSNVs {
 	command <<<
 		set -euo pipefail
 
-		$BCFTOOLS_ROOT/bin/bcftools view -s ~{vcftumorsample} ~{tumorvcf} |\
+		$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorbasename} ~{tumorvcf} |\
 		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome} |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
@@ -443,7 +443,7 @@ task DepthOfCoverage {
 		String region
 		String interval
 		String CNVcall
-		String ref = "$HG38_ROOT/hg38_random.fa"
+		String genome = "$HG38_ROOT/hg38_random.fa"
 		String modules = "mrdetect/1.0 hg38/p12"
 		Int jobMemory = 64
 		Int threads = 4
@@ -458,7 +458,7 @@ task DepthOfCoverage {
 		interval: "Region in form chrX_12000_12500"
 		CNVcall: "DUP, DEL or NEU"
 		modules: "Required environment modules"
-		ref: "Genome Reference"
+		genome: "Genome Reference"
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
 		timeout: "Hours before task timeout"
@@ -474,7 +474,7 @@ task DepthOfCoverage {
 			--summaryCoverageThreshold 100 \
 			--intervals ~{region} \
 			--interval_merging OVERLAPPING_ONLY \
-			-R ~{ref} \
+			-R ~{genome} \
 			-I ~{inputbam} \
 			-o ~{basename}.DepthOfCoverage
 
@@ -504,7 +504,7 @@ task calculateMedians {
 	input {
 		Array[File] depthOfCoverages
 		String? basename
-		Int window
+		Int window = 500
 		File bedIntervals
 		String modules = "mrdetect/1.0 hg38/p12"
 		Int jobMemory = 64
@@ -576,7 +576,7 @@ task detectCNAs {
 		String plasmabasename
 		Int plasma_coverage 
 		Int reference_coverage
-		Int window
+		Int window  = 500
 		Float? median_thresh = 1.5
 		String? interval_name = "interval"
 		String modules = "mrdetect/1.0 hg38/p12"
