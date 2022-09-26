@@ -1,67 +1,81 @@
 library(data.table)
 library(tidyverse)
-library(cowplot)
-library(ggdist)
-library(gghalves)
+library(ggplot2)
+library(optparse)
 
-#https://z3tt.github.io/Rainclouds/
+#
+option_list = list(
+  make_option(c("-c", "--controls"), type="character", default=NULL, help="control results file path", metavar="character"),
+  make_option(c("-s", "--sample"), type="character", default=NULL, help="sample results file path", metavar="character")
+)
 
-setwd('/Volumes/')
+# get options
+opt_parser <- OptionParser(option_list=option_list, add_help_option=FALSE)
+opt <- parse_args(opt_parser)
 
-MRDetect_raw <- fread('cgi/scratch/fbeaudry/plasmaWG/pwg_test.may25.txt',header=TRUE)
+sample_path <- opt$sample
+control_path <- opt$control
 
-MRDetect_raw$type <- "mismatch"
-MRDetect_raw$type[MRDetect_raw$tumor == MRDetect_raw$plasma] <- "match"
- 
-MRDetect_raw$sitesCheckedMatch <- NA
-MRDetect_raw$sitesCheckedMatch[MRDetect_raw$tumor == MRDetect_raw$plasma] <- MRDetect_raw$sitesChecked[MRDetect_raw$tumor == MRDetect_raw$plasma]
+##test
+#setwd(/Volumes/)
+#sample_path <- 'cgi/scratch/fbeaudry/plasmaWG/TGL49_0143/TGL49_0143_Ct_T_WG_T-92_cfDNA_Input.filter.deduped.realigned.recalibrated_PLASMA_VS_TUMOR_RESULT.csv'
+#control_path <- 'cgi/scratch/fbeaudry/plasmaWG/TGL49_0143/pwg_test.sep26.txt'
+#sample_result <- fread(sample_path,header=FALSE)
+#control_result <- fread(control_path,header=FALSE)
 
 
-detection_rate_plot <- 
-ggplot(MRDetect_raw) + 
-  geom_hline(yintercept = 0,alpha=0.25) +
-  geom_text(aes(x=tumor,y=-0.001,label=sitesCheckedMatch)) +
+all_results <- rbind.data.frame(sample_result[,c(V2,V2,V3,V4,V5,V6)],control_result)
+names(all_results) <- c("sample","control","sites_checked", "reads_checked", "sites_detected", "detection_rate")
+all_results <- all_results %>%  mutate_at(c(3:6), as.numeric)
+
+all_results$type <- "controls"
+all_results$type[all_results$sample == "TUMOR"] <- "sample"
+
+Z_high <- (1.3*sd(all_results$detection_rate[all_results$sample != "TUMOR"])) +  mean(all_results$detection_rate[all_results$sample != "TUMOR"])
+
+options(bitmapType='cairo')
+svg("pWGS.svg", width = 5, height = 1.5)
+
+ggplot(all_results) + 
+  geom_hline(yintercept = 0,alpha=0.25,color="white") +
+
+  annotate(x = -0.1, xend=0.25, y=Z_high, yend=Z_high,
+           geom="segment",linetype="dashed",
+           colour = "red") +
   
+  geom_text(y = Z_high,x=0,color="red",label="Detection Cutoff", hjust = -0.1, vjust = -5,size=3) +
   
-#  geom_boxplot(aes(x=tumor,y=detectionRate,color=type),width=0.1) +
-  geom_jitter(aes(x=tumor,y=detectionRate,color=type),width = 0.1,alpha=0.75,size=2) +
-  
- # ggdist::stat_pointinterval(aes(x=tumor,y=detectionRate,color=type)) +
-  
-  theme_bw(base_size=15)+
-  theme(axis.text.x = element_text(angle = -75, vjust = 0.5, hjust=0))  + 
-  labs(x="Samples",y="Detection Rate",color="") +
+  geom_jitter(aes(x=0,y=detection_rate,color=type,size=type),width = 0.01) +
+  guides(size="none")+
+  theme_bw(base_size=10)+
+ # theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust=0.5))  + 
+  labs(x="",y="Detection Rate",color="",title="") +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
  scale_color_manual(
    values=
      c(
-       rgb(101/255, 188/255, 69/255), 
-       rgb(0,0,0)
+       "gray",
+       rgb(101/255, 188/255, 69/255)
        )
    ) +
-  guides(color="none") +
-  theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
+  theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank()) + 
+ # theme(legend.position="top") +
+  coord_flip(clip = "off", xlim=c(-0.1,0.1)) 
 
- 
-MRDetect <- MRDetect_raw %>% group_by(tumor) %>% 
-  mutate(zscore=(detectionRate-mean(detectionRate))/sd(detectionRate))
+dev.off()
 
-zscore_plot <- 
-ggplot(MRDetect %>% filter(type == "match"),aes(x=tumor,y=zscore)) + 
-  geom_point(size=3,shape=1) + theme_bw(base_size=15) +   
-  geom_hline(yintercept = 1.2,alpha=0.25,linetype="dashed")  +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-  theme(axis.text.x = element_text(angle = -75, vjust = 0.5, hjust=0))  +
-  scale_color_manual(
-    values=
-      c(
-        rgb(101/255, 188/255, 69/255), 
-        rgb(0,0,0)
-      )
-  ) +   labs(x="Samples",y="Z-score",color="") 
 
-plot_grid(detection_rate_plot,zscore_plot,  ncol = 1, rel_heights = c(1,0.75),align = 'v')
+pzscore <- (all_results$detection_rate[all_results$sample == "TUMOR"] -
+mean(all_results$detection_rate[all_results$sample != "TUMOR"]))/
+sd(all_results$detection_rate[all_results$sample != "TUMOR"])
 
+if(zscore > 1.2){
+  print("Tumor Reads Detected")
+}else if(zscore <= 1.2){
+  print("No More Tumor Reads Detected Than Expected")
+}else{
+  print("Error with zscore")
+}
 
