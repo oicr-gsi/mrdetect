@@ -1,7 +1,5 @@
 version 1.0
 
-
-
 workflow mrdetect {
 	input {
 		File plasmabam 
@@ -41,8 +39,8 @@ workflow mrdetect {
 	scatter (control in parseControls.controlFiles) {
 		call detectSNVs as detectControl {
 			input: 
-			plasmabam = control[1], 
-			plasmabai = control[2], 
+			plasmabam = control[0], 
+			plasmabai = control[1], 
 			tumorvcf = tumorvcf
 		}
 	}
@@ -138,12 +136,14 @@ workflow mrdetect {
 		]
 		output_meta: {
 			snvDetectionFinalResult: "Final result and call from SNV detection",
-			delsdupsZscore: "Final result and call from CNA detection"
+			delsdupsZscore: "Final result and call from CNA detection",
+			pWGS_svg: "pWGS svg"
 		}
 	}
 	output {
 		File snvDetectionFinalResult = "~{plasmabasename}_PLASMA_VS_TUMOR_RESULT.csv"
 		File? delsdupsZscore = "~{plasmabasename}.robustZscore.delsdups.summary.txt"
+		File pWGS_svg = "pWGS.svg"
 	}
 }
 
@@ -154,12 +154,12 @@ task detectSNVs {
 		File tumorvcf
 		String tumorbasename = basename("~{tumorvcf}", ".filter.deduped.realigned.recalibrated.mutect2.filtered.vcf.gz")
 		String plasmabasename = basename("~{plasmabam}", ".filter.deduped.realigned.recalibrated.bam")
-		String modules = "mrdetect/1.0 bcftools/1.9"
+		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12"
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
 		String tumorVCFfilter = "FILTER~'slippage' | FILTER~'weak_evidence' | FILTER~'strand_bias' | FILTER~'position' | FILTER~'normal_artifact' | FILTER~'multiallelic' | FILTER~'map_qual' | FILTER~'germline' | FILTER~'fragment' | FILTER~'contamination' | FILTER~'base_qual'" 
-		String tumorVAF = "0.01"
+		String tumorVAF = "0.1"
 		String pickle = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/trained_SVM.pkl"
 		String blacklist = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/blacklist.txt.gz"
 		String genome = "$HG38_ROOT/hg38_random.fa"
@@ -279,10 +279,11 @@ task snvDetectionSummary {
 		File? sampleCalls
 		Array[File] controlCalls
 		String DetectionRScript = "$MRDETECT_SCRIPTS_ROOT/bin/pwg_test.R"
+		String? samplebasename = basename("~{sampleCalls}", ".PLASMA_VS_TUMOR_RESULT.csv")
 		Int jobMemory = 20
 		Int threads = 1
 		Int timeout = 2
-		String modules = "rstats/4.0"
+		String modules = "mrdetect-scripts/1.0"
 	}
 
 	parameter_meta {
@@ -294,9 +295,9 @@ task snvDetectionSummary {
 	command <<<
 		set -euo pipefail
 
-		cat ~{sep=' ' controlCalls} >HBCs.txt
+		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' >~{samplebasename}.HBCs.txt
 
-		Rscript --vanilla ~{DetectionRScript} -s ~{sampleCalls} -c HBCs.txt
+		Rscript --vanilla ~{DetectionRScript} -s ~{sampleCalls} -S ~{samplebasename} -c ~{samplebasename}.HBCs.txt
 
 	>>> 
 
@@ -308,12 +309,13 @@ task snvDetectionSummary {
 	}
 
 	output {
-		File JSONout = "mrdetect.json"
+		File pWGS_svg = "~{samplebasename}.pWGS.svg"
+		File HBC_calls = "~{samplebasename}.HBCs.txt"
 	}
 
 	meta {
 		output_meta: {
-			JSONout : "JSON file of mrdetect results"
+			pWGS_svg : "JSON file of mrdetect results"
 		}
 	}
 }
