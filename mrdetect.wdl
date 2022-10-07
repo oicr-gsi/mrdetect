@@ -251,43 +251,4 @@ task snvDetectionSummary {
 	}
 }
 
-task calcCoverage {
-	input {
-		File? inputbam
-		String modules = "samtools"
-		Int jobMemory = 20
-		Int threads = 1
-		Int timeout = 2
-	}
-
-	parameter_meta {
-		jobMemory: "Memory allocated for this job (GB)"
-		threads: "Requested CPU threads"
-		timeout: "Hours before task timeout"
-	}
-
-	command <<<
-		set -euo pipefail
-
-		samtools depth -a ~{inputbam} |  awk '{sum+=$3} END {print sum/NR}'
-
-	>>> 
-
-	runtime {
-		modules: "~{modules}"
-		memory:  "~{jobMemory} GB"
-		cpu:     "~{threads}"
-		timeout: "~{timeout}"
-	}
-
-	output {
-		Int meanCoverage = stdout()
-	}
-
-	meta {
-		output_meta: {
-			JSONout : "JSON file of sigtools and CHORD signatures"
-		}
-	}
-}
 
