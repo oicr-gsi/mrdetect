@@ -154,16 +154,17 @@ task detectSNVs {
 		File tumorvcf
 		String tumorbasename = basename("~{tumorvcf}", ".filter.deduped.realigned.recalibrated.mutect2.filtered.vcf.gz")
 		String plasmabasename = basename("~{plasmabam}", ".filter.deduped.realigned.recalibrated.bam")
-		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12"
+		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 tabix"
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
-		String tumorVCFfilter = "FILTER~'slippage' | FILTER~'weak_evidence' | FILTER~'strand_bias' | FILTER~'position' | FILTER~'normal_artifact' | FILTER~'multiallelic' | FILTER~'map_qual' | FILTER~'germline' | FILTER~'fragment' | FILTER~'contamination' | FILTER~'base_qual'" 
+		String tumorVCFfilter = "FILTER~'haplotype' | FILTER~'clustered_events' | FILTER~'slippage' | FILTER~'weak_evidence' | FILTER~'strand_bias' | FILTER~'position' | FILTER~'normal_artifact' | FILTER~'multiallelic' | FILTER~'map_qual' | FILTER~'germline' | FILTER~'fragment' | FILTER~'contamination' | FILTER~'base_qual'" 
 		String tumorVAF = "0.1"
 		String pickle = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/trained_SVM.pkl"
 		String blacklist = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/blacklist.txt.gz"
 		String genome = "$HG38_ROOT/hg38_random.fa"
-
+		String difficultRegions = "--regions-file $HG38_DAC_EXCLUSION_ROOT/hg38-dac-exclusion.v2.bed"
+		String filterAndDetectScript = "$MRDETECT_ROOT/bin/filterAndDetect"
 	}
 
 	parameter_meta {
@@ -182,13 +183,16 @@ task detectSNVs {
 		pickle: "trained pickle for detecting real tumor reads"
 		blacklist: "list of sites to exclude from analysis, gzipped"
 		genome: "Path to loaded genome .fa"
+		difficultRegions: "Path to .bed excluding difficult regions, string must include the flag --regions-file "
 	}
 
 	command <<<
 		set -euo pipefail
 
-		$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorbasename} ~{tumorvcf} |\
-		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome} |\
+		tabix -fp vcf ~{tumorvcf}
+
+		$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorbasename} ~{difficultRegions} ~{tumorvcf} |\
+		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome}  |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" >~{tumorbasename}.SNP.vcf
@@ -206,10 +210,13 @@ task detectSNVs {
 
 		cp ~{blacklist} ./blacklist.txt.gz
 
-		$MRDETECT_ROOT/bin/filterAndDetect \
+		~{filterAndDetectScript} \
 			~{tumorbasename}.SNP.vcf \
 			~{plasmabasename}_PLASMA_VS_TUMOR.svm.tsv \
-			~{plasmabasename}_PLASMA_VS_TUMOR_RESULT.csv
+			~{plasmabasename}_PLASMA_VS_TUMOR_RESULT.csv >detection_output.txt
+
+		awk '$1 ~ "chr" {print $1"\t"$2"\t"$3"\t"$4}' detection_output.txt | uniq -c >detectionsPerSite.txt
+
 
 	>>>
 

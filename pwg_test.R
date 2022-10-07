@@ -27,6 +27,7 @@ sample_name <- opt$sampleName
 #sample_path <- 'TGL49_0143_Ct_T_WG_T-92_cfDNA_Input_PLASMA_VS_TUMOR_RESULT.csv'
 #control_path <- 'HBCs.txt'
 #sample_name <- 'TGL49_0143'
+#plasma_coverage_file <- 'detectionsPerSite.txt'
 
 #read files and combine
 sample_result <- fread(sample_path,header=FALSE)
@@ -51,7 +52,7 @@ if(zscore > 1.2){
 
 zscore_cutoff <- (1.3*sd(all_results$detection_rate[all_results$type == "CONTROL"])) +  mean(all_results$detection_rate[all_results$type == "CONTROL"])
 
-detection_multiplier <- all_results$detection_rate[all_results$type == "TUMOR"]/Z_high
+detection_multiplier <- all_results$detection_rate[all_results$type == "TUMOR"]/zscore_cutoff
 
 mrdetect_call <- list(zscore,cancer_detected,zscore_cutoff,detection_multiplier)
 names(mrdetect_call) <- c("zscore","cancer_detected","zscore_cutoff","detection_multiplier")
@@ -67,7 +68,7 @@ names(sample_summary) <- c("sites_checked", "reads_checked", "sites_detected", "
 all.results <- list(sample_name,sample_summary,HBC_summary,mrdetect_call)
 names(all.results) <- c("sample_name","sample_summary","HBC_summary","mrdetect_call")
 
-#conver to JSON and write
+#convert to JSON and write
 ListJSON <- jsonlite::toJSON(all.results,pretty=TRUE,auto_unbox=TRUE)
 
 write(ListJSON,file = paste(sample_name,".mrdetect.json",sep=""))
@@ -80,11 +81,11 @@ ggplot(all_results) +
   
   geom_hline(yintercept = 0,alpha=0.25,color="white") +
 
-  annotate(x = -0.1, xend=0.25, y=Z_high, yend=Z_high,
+  annotate(x = -0.1, xend=0.25, y=zscore_cutoff, yend=zscore_cutoff,
            geom="segment",linetype="dashed",
            colour = "red") +
   
-  geom_text(y = zscore_cutoff,x=0,color="red",label="Detection Cutoff", hjust = -0.1, vjust = -5,size=3) +
+  annotate(geom="text",y = zscore_cutoff,x=0,color="red",label="Detection Cutoff", hjust = -0.1, vjust = -5,size=3) +
   
   guides(size="none")+
   labs(x="",y="Detection Rate",color="",title="") +
@@ -102,3 +103,16 @@ ggplot(all_results) +
 
 dev.off()
 
+plasma_coverage <- read.table(plasma_coverage_file)
+
+ggplot(plasma_coverage,aes(x=V1)) + 
+ geom_histogram( bins = max(plasma_coverage$V1)) +
+ # geom_density() + 
+  theme_classic() + labs(x="Reads per site",y="Number of Sites") +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "lines"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        text = element_text(size = 15),
+        #axis.title.y=element_blank(),
+        #axis.text.y=element_blank(),
+        axis.ticks=element_blank())
