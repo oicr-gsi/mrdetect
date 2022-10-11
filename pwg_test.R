@@ -12,7 +12,9 @@ options(scipen=999)
 option_list = list(
   make_option(c("-c", "--controls"), type="character", default=NULL, help="control results file path", metavar="character"),
   make_option(c("-s", "--sample"), type="character", default=NULL, help="sample results file path", metavar="character"),
-  make_option(c("-S", "--sampleName"), type="character", default=NULL, help="sample name", metavar="character")
+  make_option(c("-S", "--sampleName"), type="character", default=NULL, help="sample name", metavar="character"),
+  make_option(c("-Z", "--zscoreCutoff"), type="integer", default=1.2, help="Z-score cutoff", metavar="integer")
+  
 )
 
 opt_parser <- OptionParser(option_list=option_list, add_help_option=FALSE)
@@ -21,13 +23,13 @@ opt <- parse_args(opt_parser)
 sample_path <- opt$sample
 control_path <- opt$control
 sample_name <- opt$sampleName
+zscore_cutoff <- opt$zscoreCutoff
 
 ##test
 #setwd('/Volumes/cgi/scratch/fbeaudry/plasmaWG/TGL49_0143/')
 #sample_path <- 'TGL49_0143_Ct_T_WG_T-92_cfDNA_Input_PLASMA_VS_TUMOR_RESULT.csv'
 #control_path <- 'HBCs.txt'
 #sample_name <- 'TGL49_0143'
-#plasma_coverage_file <- 'detectionsPerSite.txt'
 
 #read files and combine
 sample_result <- fread(sample_path,header=FALSE)
@@ -38,24 +40,24 @@ names(all_results) <- c("sample","type","sites_checked", "reads_checked", "sites
 
 #calculate Z-score for sample
 zscore <- (all_results$detection_rate[all_results$type == "TUMOR"] -
-              mean(all_results$detection_rate[all_results$type == "CONTROL"]))/
-              sd(all_results$detection_rate[all_results$type == "CONTROL"])
+              mean(all_results$detection_rate))/
+              sd(all_results$detection_rate)
 
-
-if(zscore > 1.2){
+#zscore_cutoff = 1.2 cutoff keeps specificity above 80% empirically in Zviran 2020
+if(zscore > zscore_cutoff){
   cancer_detected = "TRUE"
-}else if(zscore <= 1.2){
+}else if(zscore <= zscore_cutoff){
   cancer_detected = "FALSE"
 }else{
   print("Error with z-score")
 }
 
-zscore_cutoff <- (1.3*sd(all_results$detection_rate[all_results$type == "CONTROL"])) +  mean(all_results$detection_rate[all_results$type == "CONTROL"])
+datatset_cutoff <- (zscore_cutoff * sd(all_results$detection_rate)) +  mean(all_results$detection_rate)
 
-detection_multiplier <- all_results$detection_rate[all_results$type == "TUMOR"]/zscore_cutoff
+detection_multiplier <- all_results$detection_rate[all_results$type == "TUMOR"]/datatset_cutoff
 
-mrdetect_call <- list(zscore,cancer_detected,zscore_cutoff,detection_multiplier)
-names(mrdetect_call) <- c("zscore","cancer_detected","zscore_cutoff","detection_multiplier")
+mrdetect_call <- list(zscore,cancer_detected,datatset_cutoff,detection_multiplier)
+names(mrdetect_call) <- c("zscore","cancer_detected","datatset_cutoff","detection_multiplier")
 
 HBC_means <- colMeans(control_result[,c("V3","V4","V5","V6"),])
 HBC_summary <- list(round(as.numeric(HBC_means[1]),2),round(as.numeric(HBC_means[2]),2),round(as.numeric(HBC_means[3]),2),as.numeric(HBC_means[4]))
@@ -81,11 +83,11 @@ ggplot(all_results) +
   
   geom_hline(yintercept = 0,alpha=0.25,color="white") +
 
-  annotate(x = -0.1, xend=0.25, y=zscore_cutoff, yend=zscore_cutoff,
+  annotate(x = -0.1, xend=0.25, y=datatset_cutoff, yend=datatset_cutoff,
            geom="segment",linetype="dashed",
            colour = "red") +
   
-  annotate(geom="text",y = zscore_cutoff,x=0,color="red",label="Detection Cutoff", hjust = -0.1, vjust = -5,size=3) +
+  annotate(geom="text",y = datatset_cutoff,x=0,color="red",label="Detection Cutoff", hjust = -0.1, vjust = -5,size=3) +
   
   guides(size="none")+
   labs(x="",y="Detection Rate",color="",title="") +
@@ -103,16 +105,4 @@ ggplot(all_results) +
 
 dev.off()
 
-plasma_coverage <- read.table(plasma_coverage_file)
 
-ggplot(plasma_coverage,aes(x=V1)) + 
- geom_histogram( bins = max(plasma_coverage$V1)) +
- # geom_density() + 
-  theme_classic() + labs(x="Reads per site",y="Number of Sites") +
-  theme(plot.margin = unit(c(1, 1, 1, 1), "lines"),
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(),
-        text = element_text(size = 15),
-        #axis.title.y=element_blank(),
-        #axis.text.y=element_blank(),
-        axis.ticks=element_blank())
