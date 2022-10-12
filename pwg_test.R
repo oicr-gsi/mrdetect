@@ -52,12 +52,12 @@ if(zscore > zscore_cutoff){
   print("Error with z-score")
 }
 
-datatset_cutoff <- (zscore_cutoff * sd(all_results$detection_rate)) +  mean(all_results$detection_rate)
+dataset_cutoff <- (zscore_cutoff * sd(all_results$detection_rate)) +  mean(all_results$detection_rate)
 
-detection_multiplier <- all_results$detection_rate[all_results$type == "TUMOR"]/datatset_cutoff
+detection_multiplier <- all_results$detection_rate[all_results$type == "TUMOR"]/dataset_cutoff
 
-mrdetect_call <- list(zscore,cancer_detected,datatset_cutoff,detection_multiplier)
-names(mrdetect_call) <- c("zscore","cancer_detected","datatset_cutoff","detection_multiplier")
+mrdetect_call <- list(zscore,cancer_detected,dataset_cutoff,detection_multiplier)
+names(mrdetect_call) <- c("zscore","cancer_detected","dataset_cutoff","detection_multiplier")
 
 HBC_means <- colMeans(control_result[,c("V3","V4","V5","V6"),])
 HBC_summary <- list(round(as.numeric(HBC_means[1]),2),round(as.numeric(HBC_means[2]),2),round(as.numeric(HBC_means[3]),2),as.numeric(HBC_means[4]))
