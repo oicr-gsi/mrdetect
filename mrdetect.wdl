@@ -14,6 +14,7 @@ workflow mrdetect {
 		plasmabai: "plasma input .bai file"
 		tumorvcf: "tumor vcf file"
 		plasmabasename: "Base name for plasma"
+		controlFileList: "tab seperated list of bam and bai files for healthy blood controls"
 	}
 
 	call detectSNVs as detectSample {
@@ -60,13 +61,11 @@ workflow mrdetect {
 		]
 		output_meta: {
 			snvDetectionFinalResult: "Final result and call from SNV detection",
-			delsdupsZscore: "Final result and call from CNA detection",
 			pWGS_svg: "pWGS svg"
 		}
 	}
 	output {
 		File snvDetectionFinalResult = "~{plasmabasename}_PLASMA_VS_TUMOR_RESULT.csv"
-		File? delsdupsZscore = "~{plasmabasename}.robustZscore.delsdups.summary.txt"
 		File pWGS_svg = "pWGS.svg"
 	}
 }
@@ -93,8 +92,7 @@ task detectSNVs {
 
 	parameter_meta {
 		plasmabam: "plasma input .bam file"
-		plasmabai: "plasma input .bam file"
-		tumorvcf: "tumor vcf file"
+		plasmabai: "plasma input .bai file"
 		tumorvcf: "name of tumor sample in vcf"
 		tumorbasename: "Base name for tumor"
 		plasmabasename: "Base name for plasma"
@@ -108,6 +106,7 @@ task detectSNVs {
 		blacklist: "list of sites to exclude from analysis, gzipped"
 		genome: "Path to loaded genome .fa"
 		difficultRegions: "Path to .bed excluding difficult regions, string must include the flag --regions-file "
+		filterAndDetectScript: "location of filter and detect script"
 	}
 
 	command <<<
@@ -120,7 +119,6 @@ task detectSNVs {
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" >~{tumorbasename}.SNP.vcf
-
 
 		$MRDETECT_ROOT/bin/pull_reads \
 			--bam ~{plasmabam} \
@@ -210,7 +208,7 @@ task snvDetectionSummary {
 		File? sampleCalls
 		Array[File] controlCalls
 		String DetectionRScript = "$MRDETECT_SCRIPTS_ROOT/bin/pwg_test.R"
-		String? samplebasename = basename("~{sampleCalls}", ".PLASMA_VS_TUMOR_RESULT.csv")
+		String samplebasename = basename("~{sampleCalls}", ".PLASMA_VS_TUMOR_RESULT.csv")
 		Int jobMemory = 20
 		Int threads = 1
 		Int timeout = 2
@@ -218,6 +216,11 @@ task snvDetectionSummary {
 	}
 
 	parameter_meta {
+		sampleCalls: "file of detection rate call for sample"
+		controlCalls: "array of file of detection rate calls for HBCs"
+		samplebasename: "base name for files"
+		DetectionRScript: "location of pwg_test.R"
+		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
 		timeout: "Hours before task timeout"
