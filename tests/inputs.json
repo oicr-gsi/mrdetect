@@ -1,6 +1,0 @@
-{
-  "mrdetect.plasmabam": "/.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/TGL49_0148_Ct_T_TS.filter.deduped.realigned.recalibrated.bam",
-  "mrdetect.plasmabai": "/.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/TGL49_0148_Ct_T_TS.filter.deduped.realigned.recalibrated.bai",
-  "mrdetect.tumorvcf": "/.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/TGL49_0148_Om_P_WG_LIB-04-0251_T-3.filter.deduped.realigned.recalibrated.mutect2.filtered.vcf.gz"
-}
-

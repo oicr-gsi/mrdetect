@@ -1,0 +1,6 @@
+{
+    "names": [
+        "mrdetect"
+    ],
+    "wdl": "mrdetect.wdl"
+}
