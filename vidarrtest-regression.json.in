@@ -1,9 +1,9 @@
 [
     {
         "arguments": {
-            "msisensor.tumorbai": {
+            "mrdetect.tumorvcf": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/PANX_1248_Lv_M_WG_100-JHU-002_LCM3and4.filter.deduped.realigned.recalibrated.0.01.bam.bai",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -13,9 +13,9 @@
                 },
                 "type": "EXTERNAL"
             },
-            "msisensor.tumorbam": {
+            "mrdetect.plasmabam": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/PANX_1248_Lv_M_WG_100-JHU-002_LCM3and4.filter.deduped.realigned.recalibrated.0.01.bam",
+                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -25,9 +25,9 @@
                 },
                 "type": "EXTERNAL"
             },
-            "msisensor.normalbai": {
+            "mrdetect.plasmabai": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/PANX_1248_Ly_R_WG_100-JHU-002_BC.filter.deduped.realigned.recalibrated.0.01.bam.bai",
+                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -37,192 +37,81 @@
                 },
                 "type": "EXTERNAL"
             },
-            "msisensor.normalbam": {
-                "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/PANX_1248_Ly_R_WG_100-JHU-002_BC.filter.deduped.realigned.recalibrated.0.01.bam",
-                    "externalIds": [
-                        {
-                            "id": "TEST",
-                            "provider": "TEST"
-                        }
-                    ]
-                },
-                "type": "EXTERNAL"
-            },
-            "msisensor.boostrapIt": false,
-            "msisensor.outputFileNamePrefix": null,
-            "msisensor.bootstrapMSIsensor.loci": null,
-            "msisensor.bootstrapMSIsensor.jobMemory": null,
-            "msisensor.bootstrapMSIsensor.outputFileNamePrefix": null,
-            "msisensor.runMSIsensor.outputFileNamePrefix": null,
-            "msisensor.bootstrapMSIsensor.difficultRegions": null,
-            "msisensor.runMSIsensor.difficultRegions": null,
-            "msisensor.bootstrapMSIsensor.msifile": null,
-            "msisensor.runMSIsensor.jobMemory": null,
-            "msisensor.bootstrapMSIsensor.boots": null,
-            "msisensor.runMSIsensor.threads": null,
-            "msisensor.outputFileNamePrefix": null,
-            "msisensor.runMSIsensor.msifile": null,
-            "msisensor.runMSIsensor.timeout": null,
-            "msisensor.runMSIsensor.modules": null,
-            "msisensor.bootstrapMSIsensor.threads": null,
-            "msisensor.bootstrapMSIsensor.timeout": null,
-            "msisensor.bootstrapMSIsensor.modules": null
+            "mrdetect.detectSample.filterAndDetectScript": "python /.mounts/labs/CGI/scratch/fbeaudry/mrdetect/filterAndDetect.print.py",
+            "mrdetect.detectSample.blacklist": "/.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/HBC/HBCs.blacklist.vcf.gz",
+            "mrdetect.detectControl.blacklist": "/.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/HBC/HBCs.blacklist.vcf.gz",
+            "mrdetect.controlFileList": "/.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/HBC/HBC.bams.list",
+            "mrdetect.snvDetectionSummary.DetectionRScript": "/.mounts/labs/CGI/scratch/fbeaudry/mrdetect/pwg_test.R",
+            "mrdetect.detectControl.tumorbasename": "TGL64_0007_Om_M_PrSrHB-008_ARCH",
+            "mrdetect.detectSample.tumorbasename": "TGL64_0007_Om_M_PrSrHB-008_ARCH",
+            "mrdetect.detectControl.timeout": NULL,
+            "mrdetect.detectSample.plasmabasename": NULL,
+            "mrdetect.detectControl.modules": NULL,
+            "mrdetect.snvDetectionSummary.samplebasename": NULL,
+            "mrdetect.detectSample.modules": NULL,
+            "mrdetect.snvDetectionSummary.threads": NULL,
+            "mrdetect.parseControls.jobMemory": NULL,
+            "mrdetect.detectSample.timeout": NULL,
+            "mrdetect.detectControl.threads": NULL,
+            "mrdetect.detectSample.pickle": NULL,
+            "mrdetect.detectControl.tumorVCFfilter": NULL,
+            "mrdetect.detectSample.tumorVAF": NULL,
+            "mrdetect.detectControl.plasmabasename": NULL,
+            "mrdetect.parseControls.controlFileListLoc": NULL,
+            "mrdetect.detectControl.jobMemory": NULL,
+            "mrdetect.detectControl.tumorVAF": NULL,
+            "mrdetect.detectSample.genome": NULL,
+            "mrdetect.detectSample.difficultRegions": NULL,
+            "mrdetect.detectControl.tumorbasename": NULL,
+            "mrdetect.snvDetectionSummary.jobMemory": NULL,
+            "mrdetect.detectControl.difficultRegions": NULL,
+            "mrdetect.parseControls.timeout": NULL,
+            "mrdetect.snvDetectionSummary.modules": NULL,
+            "mrdetect.detectSample.threads": NULL,
+            "mrdetect.detectControl.blacklist": NULL,
+            "mrdetect.detectSample.tumorbasename": NULL,
+            "mrdetect.snvDetectionSummary.timeout": NULL,
+            "mrdetect.detectControl.genome": NULL,
+            "mrdetect.detectSample.jobMemory": NULL,
+            "mrdetect.detectControl.filterAndDetectScript": NULL,
+            "mrdetect.detectControl.pickle": NULL,
+            "mrdetect.detectSample.tumorVCFfilter": NULL
         },
-        "description": "msisensor workflow test",
+        "description": "mrdetect workflow test",
         "engineArguments": {
           "write_to_cache": false,
           "read_from_cache": false
         },
         "id": "PANX_1248Test",
         "metadata": {
-            "msisensor.msiFinalOutput": {
+            "mrdetect.msiFinalOutput": {
                 "contents": [
                     {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_msisensor_PANX_1248Test_@JENKINSID@"
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_PANX_1248Test_@JENKINSID@"
                     }
                 ],
                 "type": "ALL"
             },
-            "msisensor.msiGermline": {
+            "mrdetect.msiGermline": {
                 "contents": [
                     {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_msisensor_PANX_1248Test_@JENKINSID@"
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_PANX_1248Test_@JENKINSID@"
                     }
                 ],
                 "type": "ALL"
             },
-            "msisensor.msiSomatic": {
+            "mrdetect.msiSomatic": {
                 "contents": [
                     {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_msisensor_PANX_1248Test_@JENKINSID@"
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_msisensor_mrdetectTest_@JENKINSID@"
                     }
                 ],
                 "type": "ALL"
             },
-            "msisensor.msibooted": {
+            "mrdetect.msibooted": {
                 "contents": [
                     {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_msisensor_PANX_1248Test_@JENKINSID@"
-                    }
-                ],
-                "type": "ALL"
-            }
-        },
-        "validators": [
-            {
-                "metrics_calculate": "@CHECKOUT@/tests/calculate.sh",
-                "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-                "output_metrics": "/.mounts/labs/gsi/testdata/msisensor/1.0/output_metrics/PANX_1248Test.metrics",
-                "type": "script"
-            }
-        ]
-    },
-    {
-        "arguments": {
-            "msisensor.tumorbai": {
-                "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/PANX_1248_Lv_M_WG_100-JHU-002_LCM3and4.filter.deduped.realigned.recalibrated.0.01.bam.bai",
-                    "externalIds": [
-                        {
-                            "id": "TEST",
-                            "provider": "TEST"
-                        }
-                    ]
-                },
-                "type": "EXTERNAL"
-            },
-            "msisensor.tumorbam": {
-                "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/PANX_1248_Lv_M_WG_100-JHU-002_LCM3and4.filter.deduped.realigned.recalibrated.0.01.bam",
-                    "externalIds": [
-                        {
-                            "id": "TEST",
-                            "provider": "TEST"
-                        }
-                    ]
-                },
-                "type": "EXTERNAL"
-            },
-            "msisensor.normalbai": {
-                "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/PANX_1248_Ly_R_WG_100-JHU-002_BC.filter.deduped.realigned.recalibrated.0.01.bam.bai",
-                    "externalIds": [
-                        {
-                            "id": "TEST",
-                            "provider": "TEST"
-                        }
-                    ]
-                },
-                "type": "EXTERNAL"
-            },
-            "msisensor.normalbam": {
-                "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/PANX_1248_Ly_R_WG_100-JHU-002_BC.filter.deduped.realigned.recalibrated.0.01.bam",
-                    "externalIds": [
-                        {
-                            "id": "TEST",
-                            "provider": "TEST"
-                        }
-                    ]
-                },
-                "type": "EXTERNAL"
-            },
-            "msisensor.boostrapIt": true,
-            "msisensor.outputFileNamePrefix": null,
-            "msisensor.bootstrapMSIsensor.loci": null,
-            "msisensor.bootstrapMSIsensor.jobMemory": null,
-            "msisensor.bootstrapMSIsensor.outputFileNamePrefix": null,
-            "msisensor.runMSIsensor.outputFileNamePrefix": null,
-            "msisensor.bootstrapMSIsensor.difficultRegions": null,
-            "msisensor.runMSIsensor.difficultRegions": null,
-            "msisensor.bootstrapMSIsensor.msifile": null,
-            "msisensor.runMSIsensor.jobMemory": null,
-            "msisensor.bootstrapMSIsensor.boots": null,
-            "msisensor.runMSIsensor.threads": null,
-            "msisensor.outputFileNamePrefix": null,
-            "msisensor.runMSIsensor.msifile": null,
-            "msisensor.runMSIsensor.timeout": null,
-            "msisensor.runMSIsensor.modules": null,
-            "msisensor.bootstrapMSIsensor.threads": null,
-            "msisensor.bootstrapMSIsensor.timeout": null,
-            "msisensor.bootstrapMSIsensor.modules": null
-        },
-        "description": "msisensor workflow test with bootstrapping",
-        "engineArguments": {
-          "write_to_cache": false,
-          "read_from_cache": false
-        },
-        "id": "PANX_1248_BootstrapTest",
-        "metadata": {
-            "msisensor.msiFinalOutput": {
-                "contents": [
-                    {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_msisensor_PANX_1248Test_@JENKINSID@"
-                    }
-                ],
-                "type": "ALL"
-            },
-            "msisensor.msiGermline": {
-                "contents": [
-                    {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_msisensor_PANX_1248Test_@JENKINSID@"
-                    }
-                ],
-                "type": "ALL"
-            },
-            "msisensor.msiSomatic": {
-                "contents": [
-                    {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_msisensor_PANX_1248Test_@JENKINSID@"
-                    }
-                ],
-                "type": "ALL"
-            },
-            "msisensor.msibooted": {
-                "contents": [
-                    {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_msisensor_PANX_1248Test_@JENKINSID@"
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_PANX_1248Test_@JENKINSID@"
                     }
                 ],
                 "type": "ALL"
@@ -232,7 +121,7 @@
             {
                 "metrics_calculate": "@CHECKOUT@/tests/calculate.sh",
                 "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-                "output_metrics": "/.mounts/labs/gsi/testdata/msisensor/1.0/output_metrics/PANX_1248_BootsrapTest.metrics",
+                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.0/output_metrics/PANX_1248Test.metrics",
                 "type": "script"
             }
         ]
