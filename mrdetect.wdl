@@ -12,7 +12,7 @@ workflow mrdetect {
 	parameter_meta {
 		plasmabam: "plasma input .bam file"
 		plasmabai: "plasma input .bai file"
-		tumorvcf: "tumor vcf file"
+		tumorvcf: "tumor vcf file, bgzip"
 		plasmabasename: "Base name for plasma"
 		controlFileList: "tab seperated list of bam and bai files for healthy blood controls"
 	}
