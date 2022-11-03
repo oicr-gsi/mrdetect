@@ -30,16 +30,18 @@ zscore_cutoff <- opt$zscoreCutoff
 #sample_path <- 'TGL49_0143_Ct_T_WG_T-92_cfDNA_Input_PLASMA_VS_TUMOR_RESULT.csv'
 #control_path <- 'HBCs.txt'
 #sample_name <- 'TGL49_0143'
+#zscore_cutoff <- 1.2
 
 #read files and combine
 sample_result <- fread(sample_path,header=FALSE)
+sample_result$V2 <- "THIS SAMPLE"
 control_result <- fread(control_path,header=FALSE)
-control_result$V2 <- "CONTROL"
+control_result$V2 <- "CONTROLS"
 all_results <- rbind.data.frame(sample_result,control_result)[,-7]
 names(all_results) <- c("sample","type","sites_checked", "reads_checked", "sites_detected", "detection_rate")
 
 #calculate Z-score for sample
-zscore <- (all_results$detection_rate[all_results$type == "TUMOR"] -
+zscore <- (all_results$detection_rate[all_results$type == "THIS SAMPLE"] -
               mean(all_results$detection_rate))/
               sd(all_results$detection_rate)
 
@@ -54,7 +56,7 @@ if(zscore > zscore_cutoff){
 
 dataset_cutoff <- (zscore_cutoff * sd(all_results$detection_rate)) +  mean(all_results$detection_rate)
 
-detection_multiplier <- all_results$detection_rate[all_results$type == "TUMOR"]/dataset_cutoff
+detection_multiplier <- all_results$detection_rate[all_results$type == "THIS SAMPLE"]/dataset_cutoff
 
 mrdetect_call <- list(zscore,cancer_detected,dataset_cutoff,detection_multiplier)
 names(mrdetect_call) <- c("zscore","cancer_detected","dataset_cutoff","detection_multiplier")
@@ -79,24 +81,26 @@ options(bitmapType='cairo')
 svg(paste0(sample_name,".pWGS.svg"), width = 5, height = 1.5)
 
 ggplot(all_results) + 
-  geom_jitter(aes(x=0,y=detection_rate,color=type,size=type),width = 0.01) +
+  geom_jitter(aes(x=0,y=detection_rate,color=type,size=type,shape=type),width = 0.01) +
   
   geom_hline(yintercept = 0,alpha=0.25,color="white") +
 
-  annotate(x = -0.1, xend=0.25, y=datatset_cutoff, yend=datatset_cutoff,
+  annotate(x = -0.1, xend=0.1, y=dataset_cutoff, yend=dataset_cutoff,
            geom="segment",linetype="dashed",
            colour = "red") +
   
-  annotate(geom="text",y = datatset_cutoff,x=0,color="red",label="Detection Cutoff", hjust = -0.1, vjust = -5,size=3) +
+  annotate(geom="text",y = dataset_cutoff,x=0,color="red",label="Detection Cutoff", hjust = 0.5, vjust = -5,size=3) +
   
-  guides(size="none")+
-  labs(x="",y="Detection Rate",color="",title="") +
+  #guides(size="none")+
+  labs(x="",y="Detection Rate",color="",title="",shape="",size="") +
   scale_color_manual( values= c( "gray", rgb(101/255, 188/255, 69/255) ) ) +
+  scale_shape_manual(values=c(1,13)) +
   theme_classic() +
-  theme(plot.margin = unit(c(1, 1, 1, 1), "lines"),
+  theme(
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(),
         text = element_text(size = 15),
+        legend.title=element_blank(),
         axis.title.y=element_blank(),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank()) + 
