@@ -61,11 +61,13 @@ workflow mrdetect {
 		]
 		output_meta: {
 			snvDetectionFinalResult: "Final result and call from SNV detection",
-			pWGS_svg: "pWGS svg"
+			pWGS_svg: "pWGS svg",
+			snvDetectionHBCResult: "results from the HBCs"
 		}
 	}
 	output {
 		File snvDetectionFinalResult = "~{plasmabasename}_PLASMA_VS_TUMOR_RESULT.csv"
+		File snvDetectionHBCResult = "~{plasmabasename}_PLASMA_VS_TUMOR_RESULT.csv.HBCs.txt"
 		File pWGS_svg = "pWGS.svg"
 	}
 }

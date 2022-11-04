@@ -3,7 +3,7 @@
         "arguments": {
             "mrdetect.tumorvcf": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Br_P_WG.chr21.vcf.gz",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -15,7 +15,7 @@
             },
             "mrdetect.plasmabam": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Ct_T_WG.chr21.bam",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -27,7 +27,7 @@
             },
             "mrdetect.plasmabai": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Ct_T_WG.chr21.bam.bai",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -37,18 +37,52 @@
                 },
                 "type": "EXTERNAL"
             },
-            "mrdetect.detectSample.filterAndDetectScript": "python /.mounts/labs/CGI/scratch/fbeaudry/mrdetect/filterAndDetect.print.py",
-            "mrdetect.detectSample.blacklist": "/.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/HBC/HBCs.blacklist.vcf.gz",
-            "mrdetect.detectControl.blacklist": "/.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/HBC/HBCs.blacklist.vcf.gz",
-            "mrdetect.controlFileList": "/.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/HBC/HBC.bams.list",
-            "mrdetect.snvDetectionSummary.DetectionRScript": "/.mounts/labs/CGI/scratch/fbeaudry/mrdetect/pwg_test.R",
-            "mrdetect.detectControl.tumorbasename": "TGL64_0007_Om_M_PrSrHB-008_ARCH",
-            "mrdetect.detectSample.tumorbasename": "TGL64_0007_Om_M_PrSrHB-008_ARCH",
+            "mrdetect.detectSample.blacklist": {
+                "contents": {
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.vcf.gz",
+                    "externalIds": [
+                        {
+                            "id": "TEST",
+                            "provider": "TEST"
+                        }
+                    ]
+                },
+                "type": "EXTERNAL"
+            },
+            "mrdetect.detectControl.blacklist": {
+                "contents": {
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.vcf.gz",
+                    "externalIds": [
+                        {
+                            "id": "TEST",
+                            "provider": "TEST"
+                        }
+                    ]
+                },
+                "type": "EXTERNAL"
+            },
+            "mrdetect.controlFileList": {
+                "contents": {
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBC.bams.list",
+                    "externalIds": [
+                        {
+                            "id": "TEST",
+                            "provider": "TEST"
+                        }
+                    ]
+                },
+                "type": "EXTERNAL"
+            }",
+            "mrdetect.detectSample.modules": "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 tabix mrdetect-scripts/1.1",
+            "mrdetect.snvDetectionSummary.modules": "mrdetect-scripts/1.1",
+            "mrdetect.detectSample.filterAndDetectScript": "python $MRDETECT_SCRIPTS_ROOT/bin/filterAndDetect.print.py",
+            "mrdetect.snvDetectionSummary.DetectionRScript": "$MRDETECT_SCRIPTS_ROOT/bin/pwg_test.R",
+            "mrdetect.detectControl.tumorbasename": "TGL49_0143_Br_P_T-92",
+            "mrdetect.detectSample.tumorbasename": "TGL49_0143_Br_P_T-92",
             "mrdetect.detectControl.timeout": NULL,
             "mrdetect.detectSample.plasmabasename": NULL,
             "mrdetect.detectControl.modules": NULL,
             "mrdetect.snvDetectionSummary.samplebasename": NULL,
-            "mrdetect.detectSample.modules": NULL,
             "mrdetect.snvDetectionSummary.threads": NULL,
             "mrdetect.parseControls.jobMemory": NULL,
             "mrdetect.detectSample.timeout": NULL,
@@ -66,7 +100,6 @@
             "mrdetect.snvDetectionSummary.jobMemory": NULL,
             "mrdetect.detectControl.difficultRegions": NULL,
             "mrdetect.parseControls.timeout": NULL,
-            "mrdetect.snvDetectionSummary.modules": NULL,
             "mrdetect.detectSample.threads": NULL,
             "mrdetect.detectControl.blacklist": NULL,
             "mrdetect.detectSample.tumorbasename": NULL,
@@ -82,36 +115,20 @@
           "write_to_cache": false,
           "read_from_cache": false
         },
-        "id": "PANX_1248Test",
+        "id": "TGL49_0143Test",
         "metadata": {
-            "mrdetect.msiFinalOutput": {
+            "mrdetect.snvDetectionFinalResult": {
                 "contents": [
                     {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_PANX_1248Test_@JENKINSID@"
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
                     }
                 ],
                 "type": "ALL"
             },
-            "mrdetect.msiGermline": {
+            "mrdetect.snvDetectionHBCResult": {
                 "contents": [
                     {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_PANX_1248Test_@JENKINSID@"
-                    }
-                ],
-                "type": "ALL"
-            },
-            "mrdetect.msiSomatic": {
-                "contents": [
-                    {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_msisensor_mrdetectTest_@JENKINSID@"
-                    }
-                ],
-                "type": "ALL"
-            },
-            "mrdetect.msibooted": {
-                "contents": [
-                    {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_PANX_1248Test_@JENKINSID@"
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
                     }
                 ],
                 "type": "ALL"
@@ -121,7 +138,7 @@
             {
                 "metrics_calculate": "@CHECKOUT@/tests/calculate.sh",
                 "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.0/output_metrics/PANX_1248Test.metrics",
+                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.0/output_metrics/TGL49_0143Test.metrics",
                 "type": "script"
             }
         ]
