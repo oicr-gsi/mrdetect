@@ -38,7 +38,7 @@
         },
         "mrdetect.detectSample.blacklist": {
             "contents": {
-                "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.vcf.gz",
+                "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
                 "externalIds": [
                     {
                         "id": "TEST",
@@ -50,7 +50,7 @@
         },
         "mrdetect.detectControl.blacklist": {
             "contents": {
-                "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.vcf.gz",
+                "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
                 "externalIds": [
                     {
                         "id": "TEST",
@@ -62,7 +62,7 @@
         },
         "mrdetect.controlFileList": {
             "contents": {
-                "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBC.bams.list",
+                "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBC.chr21.bam.list",
                 "externalIds": [
                     {
                         "id": "TEST",
