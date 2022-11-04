@@ -15,7 +15,7 @@
             },
             "mrdetect.plasmabam": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/TGL49_0143_Ct_T_WG.chr21.bam",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Ct_T_WG.chr21.bam",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -27,7 +27,7 @@
             },
             "mrdetect.plasmabai": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/TGL49_0143_Ct_T_WG.chr21.bam.bai",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Ct_T_WG.chr21.bam.bai",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -39,7 +39,7 @@
             },
             "mrdetect.detectSample.blacklist": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/HBCs.blacklist.vcf.gz",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.vcf.gz",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -51,7 +51,7 @@
             },
             "mrdetect.detectControl.blacklist": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/HBCs.blacklist.vcf.gz",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.vcf.gz",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -63,7 +63,7 @@
             },
             "mrdetect.controlFileList": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/msisensor/1.0/input_data/HBC.bams.list",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBC.bams.list",
                     "externalIds": [
                         {
                             "id": "TEST",
