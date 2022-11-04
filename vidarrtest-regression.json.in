@@ -1,4 +1,4 @@
-{
+[]
     "arguments": {
         "mrdetect.tumorvcf": {
             "contents": {
@@ -141,12 +141,11 @@
             "type": "ALL"
         }
     },
-    "validators": [
-        {
+    "validators": {
             "metrics_calculate": "@CHECKOUT@/tests/calculate.sh",
             "metrics_compare": "@CHECKOUT@/tests/compare.sh",
             "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.0/output_metrics/TGL49_0143Test.metrics",
             "type": "script"
-        }
-    ]
-}
+    }
+    
+]
