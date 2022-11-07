@@ -6,7 +6,7 @@ workflow mrdetect {
 		File plasmabai
 		String plasmabasename = basename("~{plasmabam}", ".filter.deduped.realigned.recalibrated.bam")
 		File tumorvcf
-		File controlFileList
+		String controlFileList
 	}
 
 	parameter_meta {
