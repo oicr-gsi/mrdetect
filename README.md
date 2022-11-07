@@ -24,8 +24,8 @@ Parameter|Value|Description
 ---|---|---
 `plasmabam`|File|plasma input .bam file
 `plasmabai`|File|plasma input .bai file
-`tumorvcf`|File|tumor vcf file
-`controlFileList`|File|tab seperated list of bam and bai files for healthy blood controls
+`tumorvcf`|File|tumor vcf file, bgzip
+`controlFileList`|String|tab seperated list of bam and bai files for healthy blood controls
 
 
 #### Optional workflow parameters:
@@ -79,25 +79,18 @@ Parameter|Value|Default|Description
 Output | Type | Description
 ---|---|---
 `snvDetectionFinalResult`|File|Final result and call from SNV detection
+`snvDetectionHBCResult`|File|results from the HBCs
 `pWGS_svg`|File|pWGS svg
 
 
 ## Commands
- This section lists commands run by the MRDetect workflow
+ This section lists command(s) run by WORKFLOW workflow
  
- ### detectSNVs
- Performs vcf Filtering, followed by processing of individual `MRDetect` calls. Filters include removing difficult regions (optional), splitting multiallelic loci into one allele per line, removing indels, removing loci by quality metrics (set by `tumorVCFfilter`) and finally removing SNPs by VAF (set by `tumorVAF`). Then `MRDetect` proceed across three steps. This task is run through for the sample and for all the controls.
+ * Running WORKFLOW
  
- 1- `pull_reads` takes any reads in the plasma .bam that corresponds to a SNP in the solid-tumour .vcf. 
+ === Description here ===.
  
- 2- `quality_score` assesses the likelihood that any read is plasma based on the quality score and the trained pickle. 
- 
- 3- `filterAndDetect` keeps reads with high plasma likehood and removed those for which SNPs are in the blacklist. Blacklist is created from HBCs and must be copied into the working directory because the path and file name are hard coded.
- 
- 4- optionally, reads from filterAndDetect can be printed to a file called detection_output (and processed by `awk`), using the edited version of the script `filterAndDetect.print.py`
- 
- 
- 
+ <<<
  		set -euo pipefail
  
  		tabix -fp vcf ~{tumorvcf}
@@ -128,11 +121,9 @@ Output | Type | Description
  		awk '$1 ~ "chr" {print $1"\t"$2"\t"$3"\t"$4}' detection_output.txt | uniq -c >detectionsPerSite.txt
  
  
- 
- ### parseControls
- This command processes the list of control files as paired bam/bai files and prints them out for detection.
- 
- 		python 
+ 	>>>
+ <<<
+ 		python <<CODE
  		import os, re
  
  		with open("~{controlFileListLoc}") as f:
@@ -142,18 +133,16 @@ Output | Type | Description
  				r = tmp[0] + "\t" + tmp[1]
  				print(r)
  		f.close()
- 		
- 
- ### snvDetectionSummary
- 
- Finally, `pwg_test.R` will process the controls and the sample to make a final call. 	
- 		
+ 		CODE
+ 	>>>
+ <<<
  		set -euo pipefail
  
  		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' >~{samplebasename}.HBCs.txt
  
  		Rscript --vanilla ~{DetectionRScript} -s ~{sampleCalls} -S ~{samplebasename} -c ~{samplebasename}.HBCs.txt
  
+ 	>>>
  ## Support
 
 For support, please file an issue on the [Github project](https://github.com/oicr-gsi) or send an email to gsi@oicr.on.ca .

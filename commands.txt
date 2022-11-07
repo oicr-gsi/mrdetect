@@ -1,0 +1,60 @@
+## Commands
+This section lists command(s) run by WORKFLOW workflow
+
+* Running WORKFLOW
+
+=== Description here ===.
+
+<<<
+		set -euo pipefail
+
+		tabix -fp vcf ~{tumorvcf}
+
+		$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorbasename} ~{difficultRegions} ~{tumorvcf} |\
+		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome}  |\
+		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
+		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
+		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" >~{tumorbasename}.SNP.vcf
+
+		$MRDETECT_ROOT/bin/pull_reads \
+			--bam ~{plasmabam} \
+			--vcf ~{tumorbasename}.SNP.vcf \
+			--out ~{plasmabasename}_PLASMA_VS_TUMOR
+
+		$MRDETECT_ROOT/bin/quality_score \
+			--pickle-name ~{pickle} \
+			--detections ~{plasmabasename}_PLASMA_VS_TUMOR.tsv \
+			--output_file ~{plasmabasename}_PLASMA_VS_TUMOR.svm.tsv
+
+		cp ~{blacklist} ./blacklist.txt.gz
+
+		~{filterAndDetectScript} \
+			~{tumorbasename}.SNP.vcf \
+			~{plasmabasename}_PLASMA_VS_TUMOR.svm.tsv \
+			~{plasmabasename}_PLASMA_VS_TUMOR_RESULT.csv >detection_output.txt
+
+		awk '$1 ~ "chr" {print $1"\t"$2"\t"$3"\t"$4}' detection_output.txt | uniq -c >detectionsPerSite.txt
+
+
+	>>>
+<<<
+		python <<CODE
+		import os, re
+
+		with open("~{controlFileListLoc}") as f:
+			for line in f:
+				line = line.rstrip()
+				tmp = line.split("\t")
+				r = tmp[0] + "\t" + tmp[1]
+				print(r)
+		f.close()
+		CODE
+	>>>
+<<<
+		set -euo pipefail
+
+		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' >~{samplebasename}.HBCs.txt
+
+		Rscript --vanilla ~{DetectionRScript} -s ~{sampleCalls} -S ~{samplebasename} -c ~{samplebasename}.HBCs.txt
+
+	>>>
