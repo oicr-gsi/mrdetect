@@ -1,150 +1,154 @@
 [
-    "arguments": {
-        "mrdetect.tumorvcf": {
-            "contents": {
-                "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Br_P_WG.chr21.vcf.gz",
-                "externalIds": [
-                    {
-                        "id": "TEST",
-                        "provider": "TEST"
-                    }
-                ]
+    {
+        "arguments": {
+            "mrdetect.tumorvcf": {
+                "contents": {
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Br_P_WG.chr21.vcf.gz",
+                    "externalIds": [
+                        {
+                            "id": "TEST",
+                            "provider": "TEST"
+                        }
+                    ]
+                },
+                "type": "EXTERNAL"
             },
-            "type": "EXTERNAL"
-        },
-        "mrdetect.plasmabam": {
-            "contents": {
-                "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Ct_T_WG.chr21.bam",
-                "externalIds": [
-                    {
-                        "id": "TEST",
-                        "provider": "TEST"
-                    }
-                ]
+            "mrdetect.plasmabam": {
+                "contents": {
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Ct_T_WG.chr21.bam",
+                    "externalIds": [
+                        {
+                            "id": "TEST",
+                            "provider": "TEST"
+                        }
+                    ]
+                },
+                "type": "EXTERNAL"
             },
-            "type": "EXTERNAL"
-        },
-        "mrdetect.plasmabai": {
-            "contents": {
-                "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Ct_T_WG.chr21.bam.bai",
-                "externalIds": [
-                    {
-                        "id": "TEST",
-                        "provider": "TEST"
-                    }
-                ]
+            "mrdetect.plasmabai": {
+                "contents": {
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Ct_T_WG.chr21.bam.bai",
+                    "externalIds": [
+                        {
+                            "id": "TEST",
+                            "provider": "TEST"
+                        }
+                    ]
+                },
+                "type": "EXTERNAL"
             },
-            "type": "EXTERNAL"
-        },
-        "mrdetect.detectSample.blacklist": {
-            "contents": {
-                "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
-                "externalIds": [
-                    {
-                        "id": "TEST",
-                        "provider": "TEST"
-                    }
-                ]
+            "mrdetect.detectSample.blacklist": {
+                "contents": {
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
+                    "externalIds": [
+                        {
+                            "id": "TEST",
+                            "provider": "TEST"
+                        }
+                    ]
+                },
+                "type": "EXTERNAL"
             },
-            "type": "EXTERNAL"
-        },
-        "mrdetect.detectControl.blacklist": {
-            "contents": {
-                "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
-                "externalIds": [
-                    {
-                        "id": "TEST",
-                        "provider": "TEST"
-                    }
-                ]
+            "mrdetect.detectControl.blacklist": {
+                "contents": {
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
+                    "externalIds": [
+                        {
+                            "id": "TEST",
+                            "provider": "TEST"
+                        }
+                    ]
+                },
+                "type": "EXTERNAL"
             },
-            "type": "EXTERNAL"
-        },
-        "mrdetect.controlFileList": {
-            "contents": {
-                "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBC.chr21.bam.list",
-                "externalIds": [
-                    {
-                        "id": "TEST",
-                        "provider": "TEST"
-                    }
-                ]
+            "mrdetect.controlFileList": {
+                "contents": {
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBC.chr21.bam.list",
+                    "externalIds": [
+                        {
+                            "id": "TEST",
+                            "provider": "TEST"
+                        }
+                    ]
+                },
+                "type": "EXTERNAL"
             },
-            "type": "EXTERNAL"
-        }",
-        "mrdetect.detectSample.modules": "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 tabix mrdetect-scripts/1.1",
-        "mrdetect.snvDetectionSummary.modules": "mrdetect-scripts/1.1",
-        "mrdetect.detectSample.filterAndDetectScript": "python $MRDETECT_SCRIPTS_ROOT/bin/filterAndDetect.print.py",
-        "mrdetect.snvDetectionSummary.DetectionRScript": "$MRDETECT_SCRIPTS_ROOT/bin/pwg_test.R",
-        "mrdetect.detectControl.tumorbasename": "TGL49_0143_Br_P_T-92",
-        "mrdetect.detectSample.tumorbasename": "TGL49_0143_Br_P_T-92",
-        "mrdetect.detectControl.timeout": NULL,
-        "mrdetect.detectSample.plasmabasename": NULL,
-        "mrdetect.detectControl.modules": NULL,
-        "mrdetect.snvDetectionSummary.samplebasename": NULL,
-        "mrdetect.snvDetectionSummary.threads": NULL,
-        "mrdetect.parseControls.jobMemory": NULL,
-        "mrdetect.detectSample.timeout": NULL,
-        "mrdetect.detectControl.threads": NULL,
-        "mrdetect.detectSample.pickle": NULL,
-        "mrdetect.detectControl.tumorVCFfilter": NULL,
-        "mrdetect.detectSample.tumorVAF": NULL,
-        "mrdetect.detectControl.plasmabasename": NULL,
-        "mrdetect.parseControls.controlFileListLoc": NULL,
-        "mrdetect.detectControl.jobMemory": NULL,
-        "mrdetect.detectControl.tumorVAF": NULL,
-        "mrdetect.detectSample.genome": NULL,
-        "mrdetect.detectSample.difficultRegions": NULL,
-        "mrdetect.detectControl.tumorbasename": NULL,
-        "mrdetect.snvDetectionSummary.jobMemory": NULL,
-        "mrdetect.detectControl.difficultRegions": NULL,
-        "mrdetect.parseControls.timeout": NULL,
-        "mrdetect.detectSample.threads": NULL,
-        "mrdetect.detectControl.blacklist": NULL,
-        "mrdetect.detectSample.tumorbasename": NULL,
-        "mrdetect.snvDetectionSummary.timeout": NULL,
-        "mrdetect.detectControl.genome": NULL,
-        "mrdetect.detectSample.jobMemory": NULL,
-        "mrdetect.detectControl.filterAndDetectScript": NULL,
-        "mrdetect.detectControl.pickle": NULL,
-        "mrdetect.detectSample.tumorVCFfilter": NULL
-    },
-    "description": "mrdetect workflow test",
-    "engineArguments": {
-      "write_to_cache": false,
-      "read_from_cache": false
-    },
-    "id": "TGL49_0143Test",
-    "metadata": {
-        "mrdetect.snvDetectionFinalResult": {
-            "contents": [
-                {
-                    "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
-                }
-            ],
-            "type": "ALL"
+            "mrdetect.detectSample.modules": "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 tabix/1.9 mrdetect-scripts/1.1",
+            "mrdetect.snvDetectionSummary.modules": "mrdetect-scripts/1.1",
+            "mrdetect.detectSample.filterAndDetectScript": "python $MRDETECT_SCRIPTS_ROOT/bin/filterAndDetect.print.py",
+            "mrdetect.snvDetectionSummary.DetectionRScript": "$MRDETECT_SCRIPTS_ROOT/bin/pwg_test.R",
+            "mrdetect.detectControl.tumorbasename": "TGL49_0143_Br_P_T-92",
+            "mrdetect.detectSample.tumorbasename": "TGL49_0143_Br_P_T-92",
+            "mrdetect.detectControl.timeout": null,
+            "mrdetect.detectSample.plasmabasename": null,
+            "mrdetect.detectControl.modules": null,
+            "mrdetect.snvDetectionSummary.samplebasename": null,
+            "mrdetect.snvDetectionSummary.threads": null,
+            "mrdetect.parseControls.jobMemory": null,
+            "mrdetect.detectSample.timeout": null,
+            "mrdetect.detectControl.threads": null,
+            "mrdetect.detectSample.pickle": null,
+            "mrdetect.detectControl.tumorVCFfilter": null,
+            "mrdetect.detectSample.tumorVAF": null,
+            "mrdetect.detectControl.plasmabasename": null,
+            "mrdetect.parseControls.controlFileListLoc": null,
+            "mrdetect.detectControl.jobMemory": null,
+            "mrdetect.detectControl.tumorVAF": null,
+            "mrdetect.detectSample.genome": null,
+            "mrdetect.detectSample.difficultRegions": null,
+            "mrdetect.detectControl.tumorbasename": null,
+            "mrdetect.snvDetectionSummary.jobMemory": null,
+            "mrdetect.detectControl.difficultRegions": null,
+            "mrdetect.parseControls.timeout": null,
+            "mrdetect.detectSample.threads": null,
+            "mrdetect.detectControl.blacklist": null,
+            "mrdetect.detectSample.tumorbasename": null,
+            "mrdetect.snvDetectionSummary.timeout": null,
+            "mrdetect.detectControl.genome": null,
+            "mrdetect.detectSample.jobMemory": null,
+            "mrdetect.detectControl.filterAndDetectScript": null,
+            "mrdetect.detectControl.pickle": null,
+            "mrdetect.detectSample.tumorVCFfilter": null
         },
-        "mrdetect.snvDetectionHBCResult": {
-            "contents": [
-                {
-                    "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
-                }
-            ],
-            "type": "ALL"
+        "description": "mrdetect workflow test",
+        "engineArguments": {
+          "write_to_cache": false,
+          "read_from_cache": false
         },
-        "mrdetect.pWGS_svg": {
-            "contents": [
-                {
-                    "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
-                }
-            ],
-            "type": "ALL"
-        }
-    },
-    "validators": {
-            "metrics_calculate": "@CHECKOUT@/tests/calculate.sh",
-            "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-            "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.0/output_metrics/TGL49_0143Test.metrics",
-            "type": "script"
-    }   
+        "id": "TGL49_0143Test",
+        "metadata": {
+            "mrdetect.snvDetectionFinalResult": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "mrdetect.snvDetectionHBCResult": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "mrdetect.pWGS_svg": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            }
+        },
+        "validators": [
+            {
+                "metrics_calculate": "@CHECKOUT@/tests/calculate.sh",
+                "metrics_compare": "@CHECKOUT@/tests/compare.sh",
+                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.0/output_metrics/TGL49_0143Test.metrics",
+                "type": "script"
+            }  
+        ]
+    } 
 ]
