@@ -17,7 +17,7 @@ workflow mrdetect {
 		tumorvcf: "tumor vcf file, bgzip"
 		tumorvcfindex: "tumor vcf index file"
 		outputFileNamePrefix: "Prefix for output file"
-		tumorSampleName: "ID for WGS tumor sample"
+		tumorSampleName: "ID for WGS tumor sample, must match .vcf header"
 		controlFileList: "tab seperated list of bam and bai files for healthy blood controls"
 	}
 
