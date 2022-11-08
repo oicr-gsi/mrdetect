@@ -80,77 +80,63 @@ Output | Type | Description
 
 
 ## Commands
- This section lists commands run by the MRDetect workflow
+ This section lists command(s) run by mrdetect workflow
  
- ### detectSNVs
- Performs vcf Filtering, followed by processing of individual `MRDetect` calls. Filters include removing difficult regions (optional), splitting multiallelic loci into one allele per line, removing indels, removing loci by quality metrics (set by `tumorVCFfilter`) and finally removing SNPs by VAF (set by `tumorVAF`). Then `MRDetect` proceed across three steps. This task is run through for the sample and for all the controls.
+ * Running mrdetect
  
- 1- `pull_reads` takes any reads in the plasma .bam that corresponds to a SNP in the solid-tumour .vcf. 
+ === Description here ===.
  
- 2- `quality_score` assesses the likelihood that any read is plasma based on the quality score and the trained pickle. 
+ <<<
+ 		set -euo pipefail
  
- 3- `filterAndDetect` keeps reads with high plasma likehood and removed those for which SNPs are in the blacklist. Blacklist is created from HBCs and must be copied into the working directory because the path and file name are hard coded.
+ 		$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorSampleName} ~{difficultRegions} ~{tumorvcf} |\
+ 		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome}  |\
+ 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
+ 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
+ 		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{tumorSampleName}.SNP.vcf
  
- 4- optionally, reads from filterAndDetect can be printed to a file called detection_output (and processed by `awk`), using the edited version of the script `filterAndDetect.print.py`
+ 		$MRDETECT_ROOT/bin/pull_reads \
+ 			--bam ~{plasmabam} \
+ 			--vcf ~{tumorSampleName}.SNP.vcf \
+ 			--out ~{outputFileNamePrefix}_PLASMA_VS_TUMOR.tsv
  
+ 		$MRDETECT_ROOT/bin/quality_score \
+ 			--pickle-name ~{pickle} \
+ 			--detections ~{outputFileNamePrefix}_PLASMA_VS_TUMOR.tsv \
+ 			--output_file ~{outputFileNamePrefix}_PLASMA_VS_TUMOR.svm.tsv
  
+ 		cp ~{blacklist} ./blacklist.txt.gz
  
-        set -euo pipefail
+ 		~{filterAndDetectScript} \
+ 			~{tumorSampleName}.SNP.vcf \
+ 			~{outputFileNamePrefix}_PLASMA_VS_TUMOR.svm.tsv \
+ 			~{outputFileNamePrefix}_PLASMA_VS_TUMOR_RESULT.csv >detection_output.txt
  
-        tabix -fp vcf ~{tumorvcf}
- 
-        $BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorbasename} ~{difficultRegions} ~{tumorvcf} |\
-        $BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome}  |\
-        $BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
-        $BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
-        $BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" >~{tumorbasename}.SNP.vcf
- 
-        $MRDETECT_ROOT/bin/pull_reads \
-            --bam ~{plasmabam} \
-            --vcf ~{tumorbasename}.SNP.vcf \
-            --out ~{plasmabasename}_PLASMA_VS_TUMOR
- 
-        $MRDETECT_ROOT/bin/quality_score \
-            --pickle-name ~{pickle} \
-            --detections ~{plasmabasename}_PLASMA_VS_TUMOR.tsv \
-            --output_file ~{plasmabasename}_PLASMA_VS_TUMOR.svm.tsv
- 
-        cp ~{blacklist} ./blacklist.txt.gz
- 
-        ~{filterAndDetectScript} \
-            ~{tumorbasename}.SNP.vcf \
-            ~{plasmabasename}_PLASMA_VS_TUMOR.svm.tsv \
-            ~{plasmabasename}_PLASMA_VS_TUMOR_RESULT.csv >detection_output.txt
- 
-        awk '$1 ~ "chr" {print $1"\t"$2"\t"$3"\t"$4}' detection_output.txt | uniq -c >detectionsPerSite.txt
+ 		awk '$1 ~ "chr" {print $1"\t"$2"\t"$3"\t"$4}' detection_output.txt | uniq -c > detectionsPerSite.txt
  
  
+ 	>>>
+ <<<
+ 		python <<CODE
+ 		import os, re
  
- ### parseControls
- This command processes the list of control files as paired bam/bai files and prints them out for detection.
+ 		with open("~{controlFileListLoc}") as f:
+ 			for line in f:
+ 				line = line.rstrip()
+ 				tmp = line.split("\t")
+ 				r = tmp[0] + "\t" + tmp[1]
+ 				print(r)
+ 		f.close()
+ 		CODE
+ 	>>>
+ <<<
+ 		set -euo pipefail
  
-        python 
-        import os, re
+ 		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' > ~{outputFileNamePrefix}.HBCs.txt
  
-        with open("~{controlFileListLoc}") as f:
-            for line in f:
-                line = line.rstrip()
-                tmp = line.split("\t")
-                r = tmp[0] + "\t" + tmp[1]
-                print(r)
-        f.close()
-        
+ 		Rscript --vanilla ~{DetectionRScript} -s ~{sampleCalls} -S ~{outputFileNamePrefix} -c ~{outputFileNamePrefix}.HBCs.txt
  
- ### snvDetectionSummary
- 
- Finally, `pwg_test.R` will process the controls and the sample to make a final call.   
-        
-        set -euo pipefail
- 
-        cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' >~{samplebasename}.HBCs.txt
- 
-        Rscript --vanilla ~{DetectionRScript} -s ~{sampleCalls} -S ~{samplebasename} -c ~{samplebasename}.HBCs.txt
- 
+ 	>>>
  ## Support
 
 For support, please file an issue on the [Github project](https://github.com/oicr-gsi) or send an email to gsi@oicr.on.ca .
