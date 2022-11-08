@@ -77,9 +77,9 @@ workflow mrdetect {
 		}
 	}
 	output {
-		File snvDetectionFinalResult = "~{outputFileNamePrefix}_PLASMA_VS_TUMOR_RESULT.csv"
-		File snvDetectionHBCResult = "~{outputFileNamePrefix}_PLASMA_VS_TUMOR_RESULT.csv.HBCs.txt"
-		File pWGS_svg = "pWGS.svg"
+		File? snvDetectionFinalResult = detectSample.snvDetectionFinalResult
+		File snvDetectionHBCResult = snvDetectionSummary.HBC_calls
+		File pWGS_svg = snvDetectionSummary.pWGS_svg
 	}
 }
 
@@ -175,18 +175,15 @@ task detectSNVs {
 	}
 }
 
-
 task parseControls {
 	input {
-		File controlFileList
-		String controlFileListLoc = "~{controlFileList}"
+		String controlFileList
 		Int jobMemory = 4
 		Int timeout = 12
 	}
 
 	parameter_meta {
 		controlFileList: "file with list of control files"
-		controlFileListLoc: "location of file with list of control files, for python intake"
 		jobMemory: "Memory for this task in GB"
 		timeout: "Timeout in hours, needed to override imposed limits"
 	}
@@ -195,7 +192,7 @@ task parseControls {
 		python <<CODE
 		import os, re
 
-		with open("~{controlFileListLoc}") as f:
+		with open("~{controlFileList}") as f:
 			for line in f:
 				line = line.rstrip()
 				tmp = line.split("\t")
@@ -211,10 +208,9 @@ task parseControls {
 	}
 
 	output {
-		Array[Array[String]] controlFiles = read_tsv(stdout())
+		Array[Array[File]] controlFiles = read_tsv(stdout())
 	}
 }
-
 
 task snvDetectionSummary {
 	input {
@@ -245,7 +241,6 @@ task snvDetectionSummary {
 		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' > ~{outputFileNamePrefix}.HBCs.txt
 
 		Rscript --vanilla ~{DetectionRScript} -s ~{sampleCalls} -S ~{outputFileNamePrefix} -c ~{outputFileNamePrefix}.HBCs.txt
-
 	>>>
 
 	runtime {

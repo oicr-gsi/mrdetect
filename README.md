@@ -24,22 +24,22 @@ Parameter|Value|Description
 ---|---|---
 `plasmabam`|File|plasma input .bam file
 `plasmabai`|File|plasma input .bai file
+`outputFileNamePrefix`|String|Prefix for output file
+`tumorSampleName`|String|ID for WGS tumor sample
 `tumorvcf`|File|tumor vcf file, bgzip
+`tumorvcfindex`|File|tumor vcf index file
 `controlFileList`|String|tab seperated list of bam and bai files for healthy blood controls
 
 
 #### Optional workflow parameters:
 Parameter|Value|Default|Description
 ---|---|---|---
-`plasmabasename`|String|basename("~{plasmabam}",".filter.deduped.realigned.recalibrated.bam")|Base name for plasma
 
 
 #### Optional task parameters:
 Parameter|Value|Default|Description
 ---|---|---|---
-`detectSample.tumorbasename`|String|basename("~{tumorvcf}",".filter.deduped.realigned.recalibrated.mutect2.filtered.vcf.gz")|Base name for tumor
-`detectSample.plasmabasename`|String|basename("~{plasmabam}",".filter.deduped.realigned.recalibrated.bam")|Base name for plasma
-`detectSample.modules`|String|"mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 tabix"|Required environment modules
+`detectSample.modules`|String|"mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0"|Required environment modules
 `detectSample.jobMemory`|Int|64|Memory allocated for this job (GB)
 `detectSample.threads`|Int|4|Requested CPU threads
 `detectSample.timeout`|Int|10|Hours before task timeout
@@ -50,12 +50,9 @@ Parameter|Value|Default|Description
 `detectSample.genome`|String|"$HG38_ROOT/hg38_random.fa"|Path to loaded genome .fa
 `detectSample.difficultRegions`|String|"--regions-file $HG38_DAC_EXCLUSION_ROOT/hg38-dac-exclusion.v2.bed"|Path to .bed excluding difficult regions, string must include the flag --regions-file 
 `detectSample.filterAndDetectScript`|String|"$MRDETECT_ROOT/bin/filterAndDetect"|location of filter and detect script
-`parseControls.controlFileListLoc`|String|"~{controlFileList}"|location of file with list of control files, for python intake
 `parseControls.jobMemory`|Int|4|Memory for this task in GB
 `parseControls.timeout`|Int|12|Timeout in hours, needed to override imposed limits
-`detectControl.tumorbasename`|String|basename("~{tumorvcf}",".filter.deduped.realigned.recalibrated.mutect2.filtered.vcf.gz")|Base name for tumor
-`detectControl.plasmabasename`|String|basename("~{plasmabam}",".filter.deduped.realigned.recalibrated.bam")|Base name for plasma
-`detectControl.modules`|String|"mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 tabix"|Required environment modules
+`detectControl.modules`|String|"mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0"|Required environment modules
 `detectControl.jobMemory`|Int|64|Memory allocated for this job (GB)
 `detectControl.threads`|Int|4|Requested CPU threads
 `detectControl.timeout`|Int|10|Hours before task timeout
@@ -67,7 +64,6 @@ Parameter|Value|Default|Description
 `detectControl.difficultRegions`|String|"--regions-file $HG38_DAC_EXCLUSION_ROOT/hg38-dac-exclusion.v2.bed"|Path to .bed excluding difficult regions, string must include the flag --regions-file 
 `detectControl.filterAndDetectScript`|String|"$MRDETECT_ROOT/bin/filterAndDetect"|location of filter and detect script
 `snvDetectionSummary.DetectionRScript`|String|"$MRDETECT_SCRIPTS_ROOT/bin/pwg_test.R"|location of pwg_test.R
-`snvDetectionSummary.samplebasename`|String|basename("~{sampleCalls}",".PLASMA_VS_TUMOR_RESULT.csv")|base name for files
 `snvDetectionSummary.jobMemory`|Int|20|Memory allocated for this job (GB)
 `snvDetectionSummary.threads`|Int|1|Requested CPU threads
 `snvDetectionSummary.timeout`|Int|2|Hours before task timeout
@@ -78,7 +74,7 @@ Parameter|Value|Default|Description
 
 Output | Type | Description
 ---|---|---
-`snvDetectionFinalResult`|File|Final result and call from SNV detection
+`snvDetectionFinalResult`|File?|Final result and call from SNV detection
 `snvDetectionHBCResult`|File|results from the HBCs
 `pWGS_svg`|File|pWGS svg
 
