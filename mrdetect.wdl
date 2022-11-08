@@ -26,7 +26,9 @@ workflow mrdetect {
 		plasmabam = plasmabam,
 		plasmabai = plasmabai,
 		tumorvcf = tumorvcf,
-		tumorvcfindex = tumorvcfindex
+		tumorvcfindex = tumorvcfindex,
+                outputFileNamePrefix = outputFileNamePrefix,
+                tumorSampleName = tumorSampleName
 	}
 
 	call parseControls {
@@ -40,14 +42,17 @@ workflow mrdetect {
 			plasmabam = control[0],
 			plasmabai = control[1],
 			tumorvcf = tumorvcf,
-			tumorvcfindex = tumorvcfindex
+			tumorvcfindex = tumorvcfindex,
+                        outputFileNamePrefix = outputFileNamePrefix,
+                        tumorSampleName = tumorSampleName
 		}
 	}
 
 	call snvDetectionSummary {
 		input:
 		controlCalls = select_all(detectControl.snvDetectionFinalResult),
-		sampleCalls = detectSample.snvDetectionFinalResult
+		sampleCalls = detectSample.snvDetectionFinalResult,
+                outputFileNamePrefix = outputFileNamePrefix 
 	}
 
 	meta {
@@ -84,9 +89,9 @@ task detectSNVs {
 		File plasmabai
 		File tumorvcf
 		File tumorvcfindex
-		String plasmaFileNamePrefix
+		String outputFileNamePrefix
 		String tumorSampleName
-		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 tabix"
+		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0"
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
@@ -123,7 +128,7 @@ task detectSNVs {
 		set -euo pipefail
 
 		$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorSampleName} ~{difficultRegions} ~{tumorvcf} |\
-		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome}  |\
+		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome} |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{tumorSampleName}.SNP.vcf
@@ -145,7 +150,7 @@ task detectSNVs {
 			~{outputFileNamePrefix}_PLASMA_VS_TUMOR.svm.tsv \
 			~{outputFileNamePrefix}_PLASMA_VS_TUMOR_RESULT.csv >detection_output.txt
 
-		awk '$1 ~ "chr" {print $1"\t"$2"\t"$3"\t"$4}' detection_output.txt | uniq -c >detectionsPerSite.txt
+		awk '$1 ~ "chr" {print $1"\t"$2"\t"$3"\t"$4}' detection_output.txt | uniq -c > detectionsPerSite.txt
 
 
 	>>>

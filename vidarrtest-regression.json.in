@@ -13,6 +13,18 @@
                 },
                 "type": "EXTERNAL"
             },
+            "mrdetect.tumorvcfindex": {
+                "contents": {
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Br_P_WG.chr21.vcf.gz.tbi",
+                    "externalIds": [
+                        {
+                            "id": "TEST",
+                            "provider": "TEST"
+                        }
+                    ]
+                },
+                "type": "EXTERNAL"
+            },
             "mrdetect.plasmabam": {
                 "contents": {
                     "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Ct_T_WG.chr21.bam",
@@ -44,8 +56,8 @@
             "mrdetect.snvDetectionSummary.modules": "mrdetect-scripts/1.1",
             "mrdetect.detectSample.filterAndDetectScript": "python $MRDETECT_SCRIPTS_ROOT/bin/filterAndDetect.print.py",
             "mrdetect.snvDetectionSummary.DetectionRScript": "$MRDETECT_SCRIPTS_ROOT/bin/pwg_test.R",
-            "mrdetect.detectControl.tumorbasename": "TGL49_0143_Br_P_T-92",
-            "mrdetect.detectSample.tumorbasename": "TGL49_0143_Br_P_T-92",
+            "mrdetect.outputFileNamePrefix": "TGL49_0143_Ct_T_WG",
+            "mrdetect.tumorSampleName": "TGL49_0143_Br_P_T-92",
             "mrdetect.detectControl.timeout": null,
             "mrdetect.detectSample.plasmabasename": null,
             "mrdetect.detectControl.modules": null,
