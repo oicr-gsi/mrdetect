@@ -43,8 +43,8 @@ workflow mrdetect {
 			plasmabai = control[1],
 			tumorvcf = tumorvcf,
 			tumorvcfindex = tumorvcfindex,
-                        outputFileNamePrefix = outputFileNamePrefix,
-                        tumorSampleName = tumorSampleName
+            outputFileNamePrefix = outputFileNamePrefix,
+            tumorSampleName = tumorSampleName
 		}
 	}
 
@@ -71,15 +71,17 @@ workflow mrdetect {
 			}
 		]
 		output_meta: {
-			snvDetectionFinalResult: "Final result and call from SNV detection",
+			snvDetectionFinalResult: "Result from SNV detection for sample",
 			pWGS_svg: "pWGS svg",
-			snvDetectionHBCResult: "results from the HBCs"
+			snvDetectionHBCResult: "Result from SNV detection for sample HBCs",
+			stats_json: "Final JSON file of mrdetect results"
 		}
 	}
 	output {
 		File? snvDetectionFinalResult = detectSample.snvDetectionFinalResult
 		File snvDetectionHBCResult = snvDetectionSummary.HBC_calls
 		File pWGS_svg = snvDetectionSummary.pWGS_svg
+		File stats_json = snvDetectionSummary.stats_json
 	}
 }
 
@@ -91,7 +93,7 @@ task detectSNVs {
 		File tumorvcfindex
 		String outputFileNamePrefix
 		String tumorSampleName
-		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0"
+		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 mrdetect-scripts/1.1"
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
@@ -177,7 +179,7 @@ task detectSNVs {
 
 task parseControls {
 	input {
-		String controlFileList
+		String controlFileList = "/.mounts/labs/gsi/src/pwgs_hbc/1.0/HBC.bam.list"
 		Int jobMemory = 4
 		Int timeout = 12
 	}
@@ -221,7 +223,7 @@ task snvDetectionSummary {
 		Int jobMemory = 20
 		Int threads = 1
 		Int timeout = 2
-		String modules = "mrdetect-scripts/1.0"
+		String modules = "mrdetect-scripts/1.1"
 	}
 
 	parameter_meta {
@@ -253,11 +255,14 @@ task snvDetectionSummary {
 	output {
 		File pWGS_svg = "~{outputFileNamePrefix}.pWGS.svg"
 		File HBC_calls = "~{outputFileNamePrefix}.HBCs.txt"
+		File stats_json = "~{outputFileNamePrefix}.mrdetect.json"
 	}
 
 	meta {
 		output_meta: {
-			pWGS_svg : "JSON file of mrdetect results"
+			HBC_calls : "HBC mrdetect results",
+			pWGS_svg : "SVG plot of mrdetect results",
+			stats_json: "JSON file of mrdetect results"
 		}
 	}
 }
