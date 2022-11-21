@@ -28,38 +28,38 @@ Parameter|Value|Description
 `tumorSampleName`|String|ID for WGS tumor sample, must match .vcf header
 `tumorvcf`|File|tumor vcf file, bgzip
 `tumorvcfindex`|File|tumor vcf index file
-`controlFileList`|String|tab seperated list of bam and bai files for healthy blood controls
 
 
 #### Optional workflow parameters:
 Parameter|Value|Default|Description
 ---|---|---|---
+`controlFileList`|String|"/.mounts/labs/gsi/src/pwgs_hbc/1.0/HBC.bam.list"|tab seperated list of bam and bai files for healthy blood controls
 
 
 #### Optional task parameters:
 Parameter|Value|Default|Description
 ---|---|---|---
-`detectSample.modules`|String|"mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0"|Required environment modules
+`detectSample.modules`|String|"mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 mrdetect-scripts/1.1 pwgs-blocklist/hg38_1"|Required environment modules
 `detectSample.jobMemory`|Int|64|Memory allocated for this job (GB)
 `detectSample.threads`|Int|4|Requested CPU threads
 `detectSample.timeout`|Int|10|Hours before task timeout
 `detectSample.tumorVCFfilter`|String|"FILTER~'haplotype' | FILTER~'clustered_events' | FILTER~'slippage' | FILTER~'weak_evidence' | FILTER~'strand_bias' | FILTER~'position' | FILTER~'normal_artifact' | FILTER~'multiallelic' | FILTER~'map_qual' | FILTER~'germline' | FILTER~'fragment' | FILTER~'contamination' | FILTER~'base_qual'"|set of filter calls to incl. in tumor VCF (any line with these flags will be included
 `detectSample.tumorVAF`|String|"0.1"|Variant Allele Frequency for tumor VCF
 `detectSample.pickle`|String|"$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/trained_SVM.pkl"|trained pickle for detecting real tumor reads
-`detectSample.blacklist`|String|"$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/blacklist.txt.gz"|list of sites to exclude from analysis, gzipped
+`detectSample.blocklist`|String|"$PWGS_BLOCKLIST_ROOT/blocklist.vcf.gz"|list of sites to exclude from analysis, gzipped
 `detectSample.genome`|String|"$HG38_ROOT/hg38_random.fa"|Path to loaded genome .fa
 `detectSample.difficultRegions`|String|"--regions-file $HG38_DAC_EXCLUSION_ROOT/hg38-dac-exclusion.v2.bed"|Path to .bed excluding difficult regions, string must include the flag --regions-file 
 `detectSample.filterAndDetectScript`|String|"$MRDETECT_ROOT/bin/filterAndDetect"|location of filter and detect script
 `parseControls.jobMemory`|Int|4|Memory for this task in GB
 `parseControls.timeout`|Int|12|Timeout in hours, needed to override imposed limits
-`detectControl.modules`|String|"mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0"|Required environment modules
+`detectControl.modules`|String|"mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 mrdetect-scripts/1.1 pwgs-blocklist/hg38_1"|Required environment modules
 `detectControl.jobMemory`|Int|64|Memory allocated for this job (GB)
 `detectControl.threads`|Int|4|Requested CPU threads
 `detectControl.timeout`|Int|10|Hours before task timeout
 `detectControl.tumorVCFfilter`|String|"FILTER~'haplotype' | FILTER~'clustered_events' | FILTER~'slippage' | FILTER~'weak_evidence' | FILTER~'strand_bias' | FILTER~'position' | FILTER~'normal_artifact' | FILTER~'multiallelic' | FILTER~'map_qual' | FILTER~'germline' | FILTER~'fragment' | FILTER~'contamination' | FILTER~'base_qual'"|set of filter calls to incl. in tumor VCF (any line with these flags will be included
 `detectControl.tumorVAF`|String|"0.1"|Variant Allele Frequency for tumor VCF
 `detectControl.pickle`|String|"$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/trained_SVM.pkl"|trained pickle for detecting real tumor reads
-`detectControl.blacklist`|String|"$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/blacklist.txt.gz"|list of sites to exclude from analysis, gzipped
+`detectControl.blocklist`|String|"$PWGS_BLOCKLIST_ROOT/blocklist.vcf.gz"|list of sites to exclude from analysis, gzipped
 `detectControl.genome`|String|"$HG38_ROOT/hg38_random.fa"|Path to loaded genome .fa
 `detectControl.difficultRegions`|String|"--regions-file $HG38_DAC_EXCLUSION_ROOT/hg38-dac-exclusion.v2.bed"|Path to .bed excluding difficult regions, string must include the flag --regions-file 
 `detectControl.filterAndDetectScript`|String|"$MRDETECT_ROOT/bin/filterAndDetect"|location of filter and detect script
@@ -67,16 +67,17 @@ Parameter|Value|Default|Description
 `snvDetectionSummary.jobMemory`|Int|20|Memory allocated for this job (GB)
 `snvDetectionSummary.threads`|Int|1|Requested CPU threads
 `snvDetectionSummary.timeout`|Int|2|Hours before task timeout
-`snvDetectionSummary.modules`|String|"mrdetect-scripts/1.0"|Required environment modules
+`snvDetectionSummary.modules`|String|"mrdetect-scripts/1.1"|Required environment modules
 
 
 ### Outputs
 
 Output | Type | Description
 ---|---|---
-`snvDetectionFinalResult`|File?|Final result and call from SNV detection
-`snvDetectionHBCResult`|File|results from the HBCs
+`snvDetectionFinalResult`|File?|Result from SNV detection for sample
+`snvDetectionHBCResult`|File|Result from SNV detection for sample HBCs
 `pWGS_svg`|File|pWGS svg
+`stats_json`|File|Final JSON file of mrdetect results
 
 
 ## Commands
@@ -89,7 +90,7 @@ Output | Type | Description
  
  2- `quality_score` assesses the likelihood that any read is plasma based on the quality score and the trained pickle. 
  
- 3- `filterAndDetect` keeps reads with high plasma likehood and removed those for which SNPs are in the blacklist. Blacklist is created from HBCs and must be copied into the working directory because the path and file name are hard coded.
+ 3- `filterAndDetect` keeps reads with high plasma likehood and removed those for which SNPs are in the blocklist. Blocklist is created from HBCs and must be copied into the working directory because the path and file name are hard coded.
  
  4- optionally, reads from filterAndDetect can be printed to a file called detection_output (and processed by `awk`), using the edited version of the script `filterAndDetect.print.py`
  
@@ -115,7 +116,7 @@ Output | Type | Description
  			--detections ~{plasmabasename}_PLASMA_VS_TUMOR.tsv \
  			--output_file ~{plasmabasename}_PLASMA_VS_TUMOR.svm.tsv
  
- 		cp ~{blacklist} ./blacklist.txt.gz
+ 		cp ~{blocklist} ./blacklist.txt.gz
  
  		~{filterAndDetectScript} \
  			~{tumorbasename}.SNP.vcf \

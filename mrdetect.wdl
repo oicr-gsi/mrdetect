@@ -27,8 +27,8 @@ workflow mrdetect {
 		plasmabai = plasmabai,
 		tumorvcf = tumorvcf,
 		tumorvcfindex = tumorvcfindex,
-                outputFileNamePrefix = outputFileNamePrefix,
-                tumorSampleName = tumorSampleName
+        outputFileNamePrefix = outputFileNamePrefix,
+        tumorSampleName = tumorSampleName
 	}
 
 	call parseControls {
@@ -52,7 +52,7 @@ workflow mrdetect {
 		input:
 		controlCalls = select_all(detectControl.snvDetectionFinalResult),
 		sampleCalls = detectSample.snvDetectionFinalResult,
-                outputFileNamePrefix = outputFileNamePrefix 
+        outputFileNamePrefix = outputFileNamePrefix 
 	}
 
 	meta {
@@ -93,14 +93,14 @@ task detectSNVs {
 		File tumorvcfindex
 		String outputFileNamePrefix
 		String tumorSampleName
-		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 mrdetect-scripts/1.1"
+		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 mrdetect-scripts/1.1 pwgs-blocklist/hg38_1"
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
 		String tumorVCFfilter = "FILTER~'haplotype' | FILTER~'clustered_events' | FILTER~'slippage' | FILTER~'weak_evidence' | FILTER~'strand_bias' | FILTER~'position' | FILTER~'normal_artifact' | FILTER~'multiallelic' | FILTER~'map_qual' | FILTER~'germline' | FILTER~'fragment' | FILTER~'contamination' | FILTER~'base_qual'"
 		String tumorVAF = "0.1"
 		String pickle = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/trained_SVM.pkl"
-		String blacklist = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/blacklist.txt.gz"
+		String blocklist = "$PWGS_BLOCKLIST_ROOT/blocklist.vcf.gz"
 		String genome = "$HG38_ROOT/hg38_random.fa"
 		String difficultRegions = "--regions-file $HG38_DAC_EXCLUSION_ROOT/hg38-dac-exclusion.v2.bed"
 		String filterAndDetectScript = "$MRDETECT_ROOT/bin/filterAndDetect"
@@ -120,7 +120,7 @@ task detectSNVs {
 		tumorVCFfilter: "set of filter calls to incl. in tumor VCF (any line with these flags will be included"
 		tumorVAF: "Variant Allele Frequency for tumor VCF"
 		pickle: "trained pickle for detecting real tumor reads"
-		blacklist: "list of sites to exclude from analysis, gzipped"
+		blocklist: "list of sites to exclude from analysis, gzipped"
 		genome: "Path to loaded genome .fa"
 		difficultRegions: "Path to .bed excluding difficult regions, string must include the flag --regions-file "
 		filterAndDetectScript: "location of filter and detect script"
@@ -145,7 +145,7 @@ task detectSNVs {
 			--detections ~{outputFileNamePrefix}_PLASMA_VS_TUMOR.tsv \
 			--output_file ~{outputFileNamePrefix}_PLASMA_VS_TUMOR.svm.tsv
 
-		cp ~{blacklist} ./blacklist.txt.gz
+		cp ~{blocklist} ./blacklist.txt.gz
 
 		~{filterAndDetectScript} \
 			~{tumorSampleName}.SNP.vcf \
