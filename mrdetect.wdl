@@ -8,7 +8,7 @@ workflow mrdetect {
 		String tumorSampleName
 		File tumorvcf
 		File tumorvcfindex
-		String controlFileList
+		String controlFileList = "/.mounts/labs/gsi/src/pwgs_hbc/1.0/HBC.bam.list"
 	}
 
 	parameter_meta {
@@ -179,7 +179,7 @@ task detectSNVs {
 
 task parseControls {
 	input {
-		String controlFileList = "/.mounts/labs/gsi/src/pwgs_hbc/1.0/HBC.bam.list"
+		String controlFileList 
 		Int jobMemory = 4
 		Int timeout = 12
 	}
