@@ -8,7 +8,7 @@ Performs vcf Filtering, followed by processing of individual `MRDetect` calls. F
 
 2- `quality_score` assesses the likelihood that any read is plasma based on the quality score and the trained pickle. 
 
-3- `filterAndDetect` keeps reads with high plasma likehood and removed those for which SNPs are in the blacklist. Blacklist is created from HBCs and must be copied into the working directory because the path and file name are hard coded.
+3- `filterAndDetect` keeps reads with high plasma likehood and removed those for which SNPs are in the blocklist. Blocklist is created from HBCs and must be copied into the working directory because the path and file name are hard coded.
 
 4- optionally, reads from filterAndDetect can be printed to a file called detection_output (and processed by `awk`), using the edited version of the script `filterAndDetect.print.py`
 
@@ -34,7 +34,7 @@ Performs vcf Filtering, followed by processing of individual `MRDetect` calls. F
 			--detections ~{plasmabasename}_PLASMA_VS_TUMOR.tsv \
 			--output_file ~{plasmabasename}_PLASMA_VS_TUMOR.svm.tsv
 
-		cp ~{blacklist} ./blacklist.txt.gz
+		cp ~{blocklist} ./blacklist.txt.gz
 
 		~{filterAndDetectScript} \
 			~{tumorbasename}.SNP.vcf \
