@@ -93,7 +93,7 @@ task detectSNVs {
 		File tumorvcfindex
 		String outputFileNamePrefix
 		String tumorSampleName
-		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 mrdetect-scripts/1.1 pwgs-blocklist/hg38_1"
+		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 mrdetect-scripts/1.1  pwgs-blocklist/hg38.1"
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
