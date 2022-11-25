@@ -8,7 +8,7 @@ workflow mrdetect {
 		String tumorSampleName
 		File tumorvcf
 		File tumorvcfindex
-		String controlFileList
+		String controlFileList = "/.mounts/labs/gsi/src/pwgs_hbc/1.0/HBC.bam.list"
 	}
 
 	parameter_meta {
@@ -27,8 +27,8 @@ workflow mrdetect {
 		plasmabai = plasmabai,
 		tumorvcf = tumorvcf,
 		tumorvcfindex = tumorvcfindex,
-                outputFileNamePrefix = outputFileNamePrefix,
-                tumorSampleName = tumorSampleName
+        outputFileNamePrefix = outputFileNamePrefix,
+        tumorSampleName = tumorSampleName
 	}
 
 	call parseControls {
@@ -43,8 +43,8 @@ workflow mrdetect {
 			plasmabai = control[1],
 			tumorvcf = tumorvcf,
 			tumorvcfindex = tumorvcfindex,
-                        outputFileNamePrefix = outputFileNamePrefix,
-                        tumorSampleName = tumorSampleName
+            outputFileNamePrefix = outputFileNamePrefix,
+            tumorSampleName = tumorSampleName
 		}
 	}
 
@@ -52,7 +52,7 @@ workflow mrdetect {
 		input:
 		controlCalls = select_all(detectControl.snvDetectionFinalResult),
 		sampleCalls = detectSample.snvDetectionFinalResult,
-                outputFileNamePrefix = outputFileNamePrefix 
+        outputFileNamePrefix = outputFileNamePrefix 
 	}
 
 	meta {
@@ -71,15 +71,17 @@ workflow mrdetect {
 			}
 		]
 		output_meta: {
-			snvDetectionFinalResult: "Final result and call from SNV detection",
+			snvDetectionFinalResult: "Result from SNV detection for sample",
 			pWGS_svg: "pWGS svg",
-			snvDetectionHBCResult: "results from the HBCs"
+			snvDetectionHBCResult: "Result from SNV detection for sample HBCs",
+			stats_json: "Final JSON file of mrdetect results"
 		}
 	}
 	output {
 		File? snvDetectionFinalResult = detectSample.snvDetectionFinalResult
 		File snvDetectionHBCResult = snvDetectionSummary.HBC_calls
 		File pWGS_svg = snvDetectionSummary.pWGS_svg
+		File stats_json = snvDetectionSummary.stats_json
 	}
 }
 
@@ -91,14 +93,14 @@ task detectSNVs {
 		File tumorvcfindex
 		String outputFileNamePrefix
 		String tumorSampleName
-		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0"
+		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 mrdetect-scripts/1.1  pwgs-blocklist/hg38.1"
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
 		String tumorVCFfilter = "FILTER~'haplotype' | FILTER~'clustered_events' | FILTER~'slippage' | FILTER~'weak_evidence' | FILTER~'strand_bias' | FILTER~'position' | FILTER~'normal_artifact' | FILTER~'multiallelic' | FILTER~'map_qual' | FILTER~'germline' | FILTER~'fragment' | FILTER~'contamination' | FILTER~'base_qual'"
 		String tumorVAF = "0.1"
 		String pickle = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/trained_SVM.pkl"
-		String blacklist = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/blacklist.txt.gz"
+		String blocklist = "$PWGS_BLOCKLIST_ROOT/blocklist.vcf.gz"
 		String genome = "$HG38_ROOT/hg38_random.fa"
 		String difficultRegions = "--regions-file $HG38_DAC_EXCLUSION_ROOT/hg38-dac-exclusion.v2.bed"
 		String filterAndDetectScript = "$MRDETECT_ROOT/bin/filterAndDetect"
@@ -118,7 +120,7 @@ task detectSNVs {
 		tumorVCFfilter: "set of filter calls to incl. in tumor VCF (any line with these flags will be included"
 		tumorVAF: "Variant Allele Frequency for tumor VCF"
 		pickle: "trained pickle for detecting real tumor reads"
-		blacklist: "list of sites to exclude from analysis, gzipped"
+		blocklist: "list of sites to exclude from analysis, gzipped"
 		genome: "Path to loaded genome .fa"
 		difficultRegions: "Path to .bed excluding difficult regions, string must include the flag --regions-file "
 		filterAndDetectScript: "location of filter and detect script"
@@ -143,7 +145,7 @@ task detectSNVs {
 			--detections ~{outputFileNamePrefix}_PLASMA_VS_TUMOR.tsv \
 			--output_file ~{outputFileNamePrefix}_PLASMA_VS_TUMOR.svm.tsv
 
-		cp ~{blacklist} ./blacklist.txt.gz
+		cp ~{blocklist} ./blacklist.txt.gz
 
 		~{filterAndDetectScript} \
 			~{tumorSampleName}.SNP.vcf \
@@ -177,7 +179,7 @@ task detectSNVs {
 
 task parseControls {
 	input {
-		String controlFileList
+		String controlFileList 
 		Int jobMemory = 4
 		Int timeout = 12
 	}
@@ -221,7 +223,7 @@ task snvDetectionSummary {
 		Int jobMemory = 20
 		Int threads = 1
 		Int timeout = 2
-		String modules = "mrdetect-scripts/1.0"
+		String modules = "mrdetect-scripts/1.1"
 	}
 
 	parameter_meta {
@@ -253,11 +255,14 @@ task snvDetectionSummary {
 	output {
 		File pWGS_svg = "~{outputFileNamePrefix}.pWGS.svg"
 		File HBC_calls = "~{outputFileNamePrefix}.HBCs.txt"
+		File stats_json = "~{outputFileNamePrefix}.mrdetect.json"
 	}
 
 	meta {
 		output_meta: {
-			pWGS_svg : "JSON file of mrdetect results"
+			HBC_calls : "HBC mrdetect results",
+			pWGS_svg : "SVG plot of mrdetect results",
+			stats_json: "JSON file of mrdetect results"
 		}
 	}
 }
