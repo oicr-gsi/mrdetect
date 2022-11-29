@@ -7,4 +7,4 @@ cd $1
 
 find -name *PLASMA_VS_TUMOR_RESULT.csv | grep -v _dis | xargs md5sum 
 find -name *HBCs.txt | grep -v _dis | xargs md5sum 
-
+find -name *mrdetect.json | grep -v _dis | xargs md5sum
