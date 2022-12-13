@@ -138,18 +138,18 @@ task detectSNVs {
 		$MRDETECT_ROOT/bin/pull_reads \
 			--bam ~{plasmabam} \
 			--vcf ~{tumorSampleName}.SNP.vcf \
-			--out ~{outputFileNamePrefix}_PLASMA_VS_TUMOR.tsv
+			--out ~{outputFileNamePrefix}_PLASMA_VS_~{tumorSampleName}_TUMOR.tsv
 
 		$MRDETECT_ROOT/bin/quality_score \
 			--pickle-name ~{pickle} \
-			--detections ~{outputFileNamePrefix}_PLASMA_VS_TUMOR.tsv \
-			--output_file ~{outputFileNamePrefix}_PLASMA_VS_TUMOR.svm.tsv
+			--detections ~{outputFileNamePrefix}_PLASMA_VS_~{tumorSampleName}_TUMOR.tsv \
+			--output_file ~{outputFileNamePrefix}_PLASMA_VS_~{tumorSampleName}_TUMOR.svm.tsv
 
 		cp ~{blocklist} ./blacklist.txt.gz
 
 		~{filterAndDetectScript} \
 			~{tumorSampleName}.SNP.vcf \
-			~{outputFileNamePrefix}_PLASMA_VS_TUMOR.svm.tsv \
+			~{outputFileNamePrefix}_PLASMA_VS_~{tumorSampleName}_TUMOR.svm.tsv \
 			~{outputFileNamePrefix}_PLASMA_VS_TUMOR_RESULT.csv >detection_output.txt
 
 		awk '$1 ~ "chr" {print $1"\t"$2"\t"$3"\t"$4}' detection_output.txt | uniq -c > detectionsPerSite.txt
