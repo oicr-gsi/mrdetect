@@ -166,11 +166,13 @@ task detectSNVs {
 
 	output {
 		File? snvDetectionFinalResult = "~{outputFileNamePrefix}_PLASMA_VS_TUMOR_RESULT.csv"
+		File snvDetectionReadsScored = "~{outputFileNamePrefix}_PLASMA_VS_~{tumorSampleName}_TUMOR.svm.tsv"
 	}
 
 	meta {
 		output_meta: {
-			snvDetectionFinalResult: "Final result and call from SNV detection"
+			snvDetectionFinalResult: "Final result and call from SNV detection",
+			snvDetectionReadsScored: "Reads with potential for tumor, with their scores"
 		}
 	}
 }
