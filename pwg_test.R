@@ -13,7 +13,7 @@ option_list = list(
   make_option(c("-c", "--controls"), type="character", default=NULL, help="control results file path", metavar="character"),
   make_option(c("-s", "--sample"), type="character", default=NULL, help="sample results file path", metavar="character"),
   make_option(c("-S", "--sampleName"), type="character", default=NULL, help="sample name", metavar="character"),
-  make_option(c("-Z", "--zscoreCutoff"), type="integer", default=1.2, help="Z-score cutoff", metavar="integer")
+  make_option(c("-Z", "--zscoreCutoff"), type="integer", default=3.09, help="Z-score cutoff", metavar="integer")
   
 )
 
@@ -24,13 +24,6 @@ sample_path <- opt$sample
 control_path <- opt$control
 sample_name <- opt$sampleName
 zscore_cutoff <- opt$zscoreCutoff
-
-##test
-#setwd('/Volumes/cgi/scratch/fbeaudry/plasmaWG/TGL49_0143/')
-#sample_path <- 'TGL49_0143_Ct_T_WG_T-92_cfDNA_Input_PLASMA_VS_TUMOR_RESULT.csv'
-#control_path <- 'HBCs.txt'
-#sample_name <- 'TGL49_0143'
-#zscore_cutoff <- 1.2
 
 #read files and combine
 sample_result <- fread(sample_path,header=FALSE)
