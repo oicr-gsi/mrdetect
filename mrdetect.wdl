@@ -8,6 +8,7 @@ workflow mrdetect {
 		String tumorSampleName
 		File tumorvcf
 		File tumorvcfindex
+		String plasmaSampleName = basename(plasmabam, ".bam")
 		String controlFileList = "/.mounts/labs/gsi/src/pwgs_hbc/1.0/HBC.bam.list"
 	}
 
@@ -21,14 +22,11 @@ workflow mrdetect {
 		controlFileList: "tab seperated list of bam and bai files for healthy blood controls"
 	}
 
-	call detectSNVs as detectSample {
-		input:
-		plasmabam = plasmabam,
-		plasmabai = plasmabai,
+	call filterVCF {
 		tumorvcf = tumorvcf,
 		tumorvcfindex = tumorvcfindex,
-        outputFileNamePrefix = outputFileNamePrefix,
-        tumorSampleName = tumorSampleName
+		tumorSampleName = tumorSampleName,
+		outputFileNamePrefix = outputFileNamePrefix
 	}
 
 	call parseControls {
@@ -41,18 +39,26 @@ workflow mrdetect {
 			input:
 			plasmabam = control[0],
 			plasmabai = control[1],
-			tumorvcf = tumorvcf,
-			tumorvcfindex = tumorvcfindex,
-            outputFileNamePrefix = outputFileNamePrefix,
-            tumorSampleName = tumorSampleName
+			plasmaSampleName = plasmaSampleName,
+			tumorvcf = filterVCF.filteredtumorvcf,
+			outputFileNamePrefix = outputFileNamePrefix
 		}
+	}
+
+	call detectSNVs as detectSample {
+		input:
+		plasmabam = plasmabam,
+		plasmabai = plasmabai,
+		plasmaSampleName = plasmaSampleName,
+		tumorvcf = filterVCF.filteredtumorvcf,
+		outputFileNamePrefix = outputFileNamePrefix
 	}
 
 	call snvDetectionSummary {
 		input:
 		controlCalls = select_all(detectControl.snvDetectionFinalResult),
 		sampleCalls = detectSample.snvDetectionFinalResult,
-        outputFileNamePrefix = outputFileNamePrefix 
+		outputFileNamePrefix = outputFileNamePrefix 
 	}
 
 	meta {
@@ -72,60 +78,47 @@ workflow mrdetect {
 		]
 		output_meta: {
 			snvDetectionFinalResult: "Result from SNV detection for sample",
-			pWGS_svg: "pWGS svg",
 			snvDetectionHBCResult: "Result from SNV detection for sample HBCs",
-			stats_json: "Final JSON file of mrdetect results"
+			stats_json: "Final JSON file of mrdetect results",
+			snpcount: "number of SNPs in vcf after filtering"
 		}
 	}
 	output {
 		File? snvDetectionFinalResult = detectSample.snvDetectionFinalResult
 		File snvDetectionHBCResult = snvDetectionSummary.HBC_calls
-		File pWGS_svg = snvDetectionSummary.pWGS_svg
 		File stats_json = snvDetectionSummary.stats_json
+		File snpcount = filterVCF.snpcount
 	}
 }
 
-task detectSNVs {
+task filterVCF {
 	input {
-		File plasmabam
-		File plasmabai
 		File tumorvcf
 		File tumorvcfindex
-		String outputFileNamePrefix
 		String tumorSampleName
-		String plasmaSampleName = basename(plasmabam, ".bam")
-		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 mrdetect-scripts/1.1  pwgs-blocklist/hg38.1"
+		String tumorVCFfilter = "FILTER~'haplotype' | FILTER~'clustered_events' | FILTER~'slippage' | FILTER~'weak_evidence' | FILTER~'strand_bias' | FILTER~'position' | FILTER~'normal_artifact' | FILTER~'multiallelic' | FILTER~'map_qual' | FILTER~'germline' | FILTER~'fragment' | FILTER~'contamination' | FILTER~'base_qual'"
+		String tumorVAF = "0.1"
+		String genome = "$HG38_ROOT/hg38_random.fa"
+		String difficultRegions = "--regions-file $HG38_DAC_EXCLUSION_ROOT/hg38-dac-exclusion.v2.bed"
+		String modules = "bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0"
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
-		String tumorVCFfilter = "FILTER~'haplotype' | FILTER~'clustered_events' | FILTER~'slippage' | FILTER~'weak_evidence' | FILTER~'strand_bias' | FILTER~'position' | FILTER~'normal_artifact' | FILTER~'multiallelic' | FILTER~'map_qual' | FILTER~'germline' | FILTER~'fragment' | FILTER~'contamination' | FILTER~'base_qual'"
-		String tumorVAF = "0.1"
-		String pickle = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/trained_SVM.pkl"
-		String blocklist = "$PWGS_BLOCKLIST_ROOT/blocklist.vcf.gz"
-		String genome = "$HG38_ROOT/hg38_random.fa"
-		String difficultRegions = "--regions-file $HG38_DAC_EXCLUSION_ROOT/hg38-dac-exclusion.v2.bed"
-		String filterAndDetectScript = "$MRDETECT_ROOT/bin/filterAndDetect"
 	}
 
 	parameter_meta {
-		plasmabam: "plasma input .bam file"
-		plasmabai: "plasma input .bai file"
 		tumorvcf: "tumor vcf file, bgzip"
 		tumorvcfindex: "tumor vcf index file"
-		outputFileNamePrefix: "Prefix for output file"
 		tumorSampleName: "ID for WGS tumor sample"
-		plasmaSampleName: "name for plasma sample"
+		tumorVCFfilter: "set of filter calls to incl. in tumor VCF (any line with these flags will be included"
+		tumorVAF: "Variant Allele Frequency for tumor VCF"
+		genome: "Path to loaded genome .fa"
+		difficultRegions: "Path to .bed excluding difficult regions, string must include the flag --regions-file "
 		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
 		timeout: "Hours before task timeout"
-		tumorVCFfilter: "set of filter calls to incl. in tumor VCF (any line with these flags will be included"
-		tumorVAF: "Variant Allele Frequency for tumor VCF"
-		pickle: "trained pickle for detecting real tumor reads"
-		blocklist: "list of sites to exclude from analysis, gzipped"
-		genome: "Path to loaded genome .fa"
-		difficultRegions: "Path to .bed excluding difficult regions, string must include the flag --regions-file "
-		filterAndDetectScript: "location of filter and detect script"
+
 	}
 
 	command <<<
@@ -137,25 +130,7 @@ task detectSNVs {
 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{tumorSampleName}.SNP.vcf
 
-		$MRDETECT_ROOT/bin/pull_reads \
-			--bam ~{plasmabam} \
-			--vcf ~{tumorSampleName}.SNP.vcf \
-			--out ~{plasmaSampleName}_PLASMA_VS_~{tumorSampleName}_TUMOR.tsv
-
-		$MRDETECT_ROOT/bin/quality_score \
-			--pickle-name ~{pickle} \
-			--detections ~{plasmaSampleName}_PLASMA_VS_~{tumorSampleName}_TUMOR.tsv \
-			--output_file ~{plasmaSampleName}_PLASMA_VS_~{tumorSampleName}_TUMOR.svm.tsv
-
-		cp ~{blocklist} ./blacklist.txt.gz
-
-		~{filterAndDetectScript} \
-			~{tumorSampleName}.SNP.vcf \
-			~{plasmaSampleName}_PLASMA_VS_~{tumorSampleName}_TUMOR.svm.tsv \
-			~{outputFileNamePrefix}_PLASMA_VS_TUMOR_RESULT.csv >detection_output.txt
-
-		awk '$1 ~ "chr" {print $1"\t"$2"\t"$3"\t"$4}' detection_output.txt | uniq -c > detectionsPerSite.txt
-
+		awk '$1 ~! "#" {print}' ~{tumorSampleName}.SNP.vcf | wc -l >SNP.count.txt
 
 	>>>
 
@@ -167,11 +142,87 @@ task detectSNVs {
 	}
 
 	output {
+		File filteredvcf = "~{tumorSampleName}.SNP.vcf"
+		File snpcount = "SNP.count.txt"
+	}
+
+	meta {
+		output_meta: {
+			filteredvcf: "Filtered vcf",
+			snpcount: "Number of SNPs after filtering"
+		}
+	}
+}
+
+task detectSNVs {
+	input {
+		File plasmabam
+		File plasmabai
+		String plasmaSampleName 
+		String outputFileNamePrefix
+		File tumorvcf
+		String modules = "mrdetect/1.0 pwgs-blocklist/hg38.1"
+		Int jobMemory = 64
+		Int threads = 4
+		Int timeout = 10
+		String pickle = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/trained_SVM.pkl"
+		String blocklist = "$PWGS_BLOCKLIST_ROOT/blocklist.vcf.gz"
+		String filterAndDetectScript = "$MRDETECT_ROOT/bin/filterAndDetect"
+	}
+
+	parameter_meta {
+		plasmabam: "plasma input .bam file"
+		plasmabai: "plasma input .bai file"
+		outputFileNamePrefix: "Prefix for output file"
+		tumorvcf: "filtered tumor vcf file"
+		plasmaSampleName: "name for plasma sample"
+		modules: "Required environment modules"
+		jobMemory: "Memory allocated for this job (GB)"
+		threads: "Requested CPU threads"
+		timeout: "Hours before task timeout"
+		pickle: "trained pickle for detecting real tumor reads"
+		blocklist: "list of sites to exclude from analysis, gzipped"
+		difficultRegions: "Path to .bed excluding difficult regions, string must include the flag --regions-file "
+		filterAndDetectScript: "location of filter and detect script"
+	}
+
+	command <<<
+		set -euo pipefail
+
+		$MRDETECT_ROOT/bin/pull_reads \
+			--bam ~{plasmabam} \
+			--vcf ~{tumorvcf} \
+			--out ~{plasmaSampleName}_PLASMA_VS_TUMOR.tsv
+
+		$MRDETECT_ROOT/bin/quality_score \
+			--pickle-name ~{pickle} \
+			--detections ~{plasmaSampleName}_PLASMA_VS_TUMOR.tsv \
+			--output_file ~{plasmaSampleName}_PLASMA_VS_TUMOR.svm.tsv
+
+		cp ~{blocklist} ./blacklist.txt.gz
+
+		~{filterAndDetectScript} \
+			~{tumorvcf} \
+			~{plasmaSampleName}_PLASMA_VS_TUMOR.svm.tsv \
+			~{outputFileNamePrefix}_PLASMA_VS_TUMOR_RESULT.csv 
+
+	>>>
+
+	runtime {
+		modules: "~{modules}"
+		memory:  "~{jobMemory} GB"
+		cpu:     "~{threads}"
+		timeout: "~{timeout}"
+	}
+
+	output {
+		File snvDetectionReadsScored = "~{plasmaSampleName}_PLASMA_VS_TUMOR.svm.tsv" 
 		File? snvDetectionFinalResult = "~{outputFileNamePrefix}_PLASMA_VS_TUMOR_RESULT.csv"
 	}
 
 	meta {
 		output_meta: {
+			snvDetectionReadsScored: "Reads with potential for tumor, with their scores",
 			snvDetectionFinalResult: "Final result and call from SNV detection"
 		}
 	}
@@ -220,6 +271,7 @@ task snvDetectionSummary {
 		Array[File] controlCalls
 		String DetectionRScript = "$MRDETECT_SCRIPTS_ROOT/bin/pwg_test.R"
 		String outputFileNamePrefix
+		String zscoreCutoff = 3.09
 		Int jobMemory = 20
 		Int threads = 1
 		Int timeout = 2
@@ -231,6 +283,7 @@ task snvDetectionSummary {
 		controlCalls: "array of file of detection rate calls for HBCs"
 		outputFileNamePrefix: "Prefix for output file"
 		DetectionRScript: "location of pwg_test.R"
+		zscoreCutoff: "Z-score Cutoff for significant difference between HBCs and sample"
 		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
@@ -242,7 +295,7 @@ task snvDetectionSummary {
 
 		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' > ~{outputFileNamePrefix}.HBCs.txt
 
-		Rscript --vanilla ~{DetectionRScript} -s ~{sampleCalls} -S ~{outputFileNamePrefix} -c ~{outputFileNamePrefix}.HBCs.txt
+		Rscript --vanilla ~{DetectionRScript} -s ~{sampleCalls} -S ~{outputFileNamePrefix} -c ~{outputFileNamePrefix}.HBCs.txt --zscoreCutoff ~{zscoreCutoff}
 	>>>
 
 	runtime {
