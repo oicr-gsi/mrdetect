@@ -93,6 +93,7 @@ task detectSNVs {
 		File tumorvcfindex
 		String outputFileNamePrefix
 		String tumorSampleName
+		String plasmaSampleName = basename(plasmabam, ".bam")
 		String modules = "mrdetect/1.0 bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0 mrdetect-scripts/1.1  pwgs-blocklist/hg38.1"
 		Int jobMemory = 64
 		Int threads = 4
@@ -113,6 +114,7 @@ task detectSNVs {
 		tumorvcfindex: "tumor vcf index file"
 		outputFileNamePrefix: "Prefix for output file"
 		tumorSampleName: "ID for WGS tumor sample"
+		plasmaSampleName: "name for plasma sample"
 		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
@@ -138,18 +140,18 @@ task detectSNVs {
 		$MRDETECT_ROOT/bin/pull_reads \
 			--bam ~{plasmabam} \
 			--vcf ~{tumorSampleName}.SNP.vcf \
-			--out ~{outputFileNamePrefix}_PLASMA_VS_~{tumorSampleName}_TUMOR.tsv
+			--out ~{plasmaSampleName}_PLASMA_VS_~{tumorSampleName}_TUMOR.tsv
 
 		$MRDETECT_ROOT/bin/quality_score \
 			--pickle-name ~{pickle} \
-			--detections ~{outputFileNamePrefix}_PLASMA_VS_~{tumorSampleName}_TUMOR.tsv \
-			--output_file ~{outputFileNamePrefix}_PLASMA_VS_~{tumorSampleName}_TUMOR.svm.tsv
+			--detections ~{plasmaSampleName}_PLASMA_VS_~{tumorSampleName}_TUMOR.tsv \
+			--output_file ~{plasmaSampleName}_PLASMA_VS_~{tumorSampleName}_TUMOR.svm.tsv
 
 		cp ~{blocklist} ./blacklist.txt.gz
 
 		~{filterAndDetectScript} \
 			~{tumorSampleName}.SNP.vcf \
-			~{outputFileNamePrefix}_PLASMA_VS_~{tumorSampleName}_TUMOR.svm.tsv \
+			~{plasmaSampleName}_PLASMA_VS_~{tumorSampleName}_TUMOR.svm.tsv \
 			~{outputFileNamePrefix}_PLASMA_VS_TUMOR_RESULT.csv >detection_output.txt
 
 		awk '$1 ~ "chr" {print $1"\t"$2"\t"$3"\t"$4}' detection_output.txt | uniq -c > detectionsPerSite.txt
@@ -166,13 +168,11 @@ task detectSNVs {
 
 	output {
 		File? snvDetectionFinalResult = "~{outputFileNamePrefix}_PLASMA_VS_TUMOR_RESULT.csv"
-		File snvDetectionReadsScored = "~{outputFileNamePrefix}_PLASMA_VS_~{tumorSampleName}_TUMOR.svm.tsv"
 	}
 
 	meta {
 		output_meta: {
-			snvDetectionFinalResult: "Final result and call from SNV detection",
-			snvDetectionReadsScored: "Reads with potential for tumor, with their scores"
+			snvDetectionFinalResult: "Final result and call from SNV detection"
 		}
 	}
 }
