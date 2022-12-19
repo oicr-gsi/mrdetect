@@ -2,104 +2,105 @@
 
 ####packages####
 library(data.table)
-library(ggplot2)
 library(optparse)
 library(jsonlite)
+library(dplyr)
 
 options(scipen=999)
 
 # get options
 option_list = list(
-  make_option(c("-c", "--controls"), type="character", default=NULL, help="control results file path", metavar="character"),
-  make_option(c("-s", "--sample"), type="character", default=NULL, help="sample results file path", metavar="character"),
-  make_option(c("-S", "--sampleName"), type="character", default=NULL, help="sample name", metavar="character"),
-  make_option(c("-Z", "--zscoreCutoff"), type="integer", default=3.09, help="Z-score cutoff", metavar="integer")
-  
+  make_option(c("-s", "--sampleName"), type="character", default=NULL, help="sample Name", metavar="character"),
+  make_option(c("-r", "--results"), type="character", default=NULL, help="results file path", metavar="character"),
+  make_option(c("-c", "--coverage"), type="integer", default=NULL, help="plasma coverage", metavar="character"),
+  make_option(c("-C", "--controlCoverageFile"), type="character", default=NULL, help="HBC coverage file", metavar="character"),
+  make_option(c("-S", "--candidateSNVsCountFile"), type="character", default=NULL, help="file with the number of SNVs", metavar="character"),
+  make_option(c("-p", "--pval"), type="numeric", default=0.001, help="p-value cutoff", metavar="numeric")
 )
 
 opt_parser <- OptionParser(option_list=option_list, add_help_option=FALSE)
 opt <- parse_args(opt_parser)
 
-sample_path <- opt$sample
-control_path <- opt$control
-sample_name <- opt$sampleName
-zscore_cutoff <- opt$zscoreCutoff
 
-#read files and combine
-sample_result <- fread(sample_path,header=FALSE)
-sample_result$V2 <- "THIS SAMPLE"
-control_result <- fread(control_path,header=FALSE)
-control_result$V2 <- "CONTROLS"
-all_results <- rbind.data.frame(sample_result,control_result)[,-7]
-names(all_results) <- c("sample","type","sites_checked", "reads_checked", "sites_detected", "detection_rate")
+sampleName <- opt$sampleName
+control_cov_path <- opt$controlCoverageFile
+results_path <- opt$results
+sample_candidate_SNPs_file <- opt$candidateSNVsCountFile
+sample_coverage <- opt$coverage
+pval_cutoff <- opt$pval
+
+##test##
+#sampleName <- "GLCS_0035_Lu_T_WG.V0.001"
+#control_cov_path <- '~/Documents/data/plasmaWG/HBC_coverages.txt'
+#results_path <- '~/Documents/data/plasmaWG/lod_seracare/GLCS_0035_Lu_T_WG.V0.001.csv'
+#sample_candidate_SNPs_file <- '~/Documents/data/plasmaWG/lod_seracare/GLCS_0035_Lu_T_WG.V0.001.SNP.count.txt'
+#sample_coverage <- 30
+#pval_cutoff <- 0.001
+
+####read files and combine####
+sample_candidate_SNPs <- as.numeric(unlist(fread(sample_candidate_SNPs_file))[[1]])
+
+results <- fread(results_path,header=TRUE)
+results$label <- "CONTROLS"
+results$label[1] <- "THIS SAMPLE"
+
+hbc_coverage <- fread(control_cov_path)
+results_cov <- left_join(results,hbc_coverage)
+
+results_cov$coverage[1] <- sample_coverage
+
+####calculations####
+#noise rate = sites detected * coverage
+results_cov$noise_rate <- results_cov$sites_detected / results_cov$coverage
+results_cov$noise <- results_cov$noise_rate * sample_coverage
+
+#calculate Tumour Fraction (TF) for sample
+adjusted_detection_rate <- (results_cov$sites_detected[results_cov$label == "THIS SAMPLE"] -
+                              mean(results_cov$noise[results_cov$label != "THIS SAMPLE"])) / 
+                              sample_candidate_SNPs
+
+tf_estimate <- 1 - ( 1 - (adjusted_detection_rate))^(1/sample_coverage)
 
 #calculate Z-score for sample
-zscore <- (all_results$detection_rate[all_results$type == "THIS SAMPLE"] -
-              mean(all_results$detection_rate))/
-              sd(all_results$detection_rate)
+zscore <- (results_cov$noise[results_cov$label == "THIS SAMPLE"] -
+             mean(results_cov$noise))/
+  sd(results_cov$noise)
 
-#zscore_cutoff = 1.2 cutoff keeps specificity above 80% empirically in Zviran 2020
-if(zscore > zscore_cutoff){
+pvalue <- pnorm(zscore,lower.tail=F)
+
+
+if(pvalue < pval_cutoff){
   cancer_detected = "TRUE"
-}else if(zscore <= zscore_cutoff){
+}else if(pvalue >= pval_cutoff){
   cancer_detected = "FALSE"
 }else{
-  print("Error with z-score")
+  print("Error with p-value")
 }
 
-dataset_cutoff <- (zscore_cutoff * sd(all_results$detection_rate)) +  mean(all_results$detection_rate)
+dataset_cutoff <- (qnorm(pval_cutoff,lower.tail = F) * sd(results_cov$detection_rate)) +  mean(results_cov$detection_rate)
 
-detection_multiplier <- all_results$detection_rate[all_results$type == "THIS SAMPLE"]/dataset_cutoff
 
-mrdetect_call <- list(zscore,cancer_detected,dataset_cutoff,detection_multiplier)
-names(mrdetect_call) <- c("zscore","cancer_detected","dataset_cutoff","detection_multiplier")
+all.results <- 
+  list(
+    "sampleName"=sampleName,
+     "sample_coverage"=sample_coverage,
+     "sample_candidate_SNPs"=sample_candidate_SNPs,
+     "tumour_fraction_estimate"=tf_estimate,
+     "zscore"=zscore,
+     "pvalue"=pvalue,
+     "dataset_detection_cutoff"=dataset_cutoff,
+     "sites_detected"=results_cov$sites_detected[results_cov$label == "THIS SAMPLE"],
+     "mean_noise"=mean(results_cov$noise[results_cov$label != "THIS SAMPLE"]),
+     "detection_rate"=results_cov$detection_rate[results_cov$label == "THIS SAMPLE"],
+     "false_positive_rate"=mean(results_cov$detection_rate[results_cov$label != "THIS SAMPLE"]),
+     "cancer_detected"=cancer_detected
+)
 
-HBC_means <- colMeans(control_result[,c("V3","V4","V5","V6"),])
-HBC_summary <- list(round(as.numeric(HBC_means[1]),2),round(as.numeric(HBC_means[2]),2),round(as.numeric(HBC_means[3]),2),as.numeric(HBC_means[4]))
-names(HBC_summary) <- c("HBC_sites_checked", "HBC_reads_checked", "HBC_sites_detected", "HBC_detection_rate")
 
-sample_results <- sample_result[,c("V3","V4","V5","V6")]
-sample_summary <- list(sample_results[[1]],as.numeric(sample_results[[2]]),as.numeric(sample_results[[3]]),as.numeric(sample_results[[4]]))
-names(sample_summary) <- c("sites_checked", "reads_checked", "sites_detected", "detection_rate")
-
-all.results <- list(sample_name,sample_summary,HBC_summary,mrdetect_call)
-names(all.results) <- c("sample_name","sample_summary","HBC_summary","mrdetect_call")
 
 #convert to JSON and write
 ListJSON <- jsonlite::toJSON(all.results,pretty=TRUE,auto_unbox=TRUE)
 
-write(ListJSON,file = paste(sample_name,".mrdetect.json",sep=""))
-
-options(bitmapType='cairo')
-svg(paste0(sample_name,".pWGS.svg"), width = 5, height = 1.5)
-
-ggplot(all_results) + 
-  geom_jitter(aes(x=0,y=detection_rate,color=type,size=type,shape=type),width = 0.01) +
-  
-  geom_hline(yintercept = 0,alpha=0.25,color="white") +
-
-  annotate(x = -0.1, xend=0.1, y=dataset_cutoff, yend=dataset_cutoff,
-           geom="segment",linetype="dashed",
-           colour = "red") +
-  
-  annotate(geom="text",y = dataset_cutoff,x=0,color="red",label="Detection Cutoff", hjust = 0.5, vjust = -5,size=3) +
-  
-  #guides(size="none")+
-  labs(x="",y="Detection Rate",color="",title="",shape="",size="") +
-  scale_color_manual( values= c( "gray", rgb(101/255, 188/255, 69/255) ) ) +
-  scale_shape_manual(values=c(1,13)) +
-  theme_classic() +
-  theme(
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(),
-        text = element_text(size = 15),
-        legend.title=element_blank(),
-        axis.title.y=element_blank(),
-        axis.text.y=element_blank(),
-        axis.ticks.y=element_blank()) + 
- # theme(legend.position="top") +
-  coord_flip(clip = "off", xlim=c(-0.1,0.1)) 
-
-dev.off()
+write(ListJSON,file = paste(sampleName,".mrdetect.json",sep=""))
 
 
