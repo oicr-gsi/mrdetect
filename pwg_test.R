@@ -39,14 +39,10 @@ vaf_file <- opt$vafFile
 #as.json <- FALSE
 #vaf_file <- '/Volumes/cgi/scratch/fbeaudry/plasmaWG/seracare_lod/insilico/GLCS_0035_Lu_T_WG.mrdetect.vaf.txt'
 
-
-
-
 ####read files and combine####
 vaf <- fread(vaf_file)
 sample_coverage = median(vaf$goodreads)
 median_vaf = median(vaf$vaf)
-
 
 sample_candidate_SNPs <- as.numeric(unlist(fread(sample_candidate_SNPs_file))[[1]])
 
