@@ -86,7 +86,12 @@ if(pvalue < pval_cutoff){
   print("Error with p-value")
 }
 
-dataset_cutoff <- (qnorm(pval_cutoff,lower.tail = F) * sd(results_cov$detection_rate)) +  mean(results_cov$detection_rate)
+dataset_cutoff <- (qnorm(pval_cutoff,lower.tail = F) * sd(results_cov$sites_detected)) +  mean(results_cov$sites_detected)
+
+tf_estimate_adj <- tf_estimate * 2
+if(cancer_detected == FALSE){
+  tf_estimate_adj <- 0
+}
 
 if(as.json == TRUE){
   library(jsonlite)
@@ -137,18 +142,22 @@ if(as.json == TRUE){
  )
 }
 
-if(wanna_plot == "yes" | wanna_plot == "cairo"){
+if(wanna_plot == "png" | wanna_plot == "cairo"){
   library(ggplot2)
   
   if(wanna_plot == "cairo"){
     options(bitmapType='cairo')
     svg(paste0(sample_name,".pWGS.svg"), width = 5, height = 1.5)
-  } else {
+  } else if(wanna_plot == "svg") {
+    svg(paste0(sample_name,".pWGS.svg"), width = 5, height = 1.5)
+  } else if(wanna_plot == "png") {
     png(paste0(sample_name,".pWGS.png"), width = 5, height = 1.5)
+  } else {
+    print("Error with plotting")
   }
   
   ggplot(all_results) + 
-    geom_jitter(aes(x=0,y=detection_rate,color=type,size=type,shape=type),width = 0.01) +
+    geom_jitter(aes(x=0,y=sites_detected,color=type,size=type,shape=type),width = 0.01) +
     
     geom_hline(yintercept = 0,alpha=0.25,color="white") +
     
@@ -159,7 +168,7 @@ if(wanna_plot == "yes" | wanna_plot == "cairo"){
     annotate(geom="text",y = dataset_cutoff,x=0,color="red",label="Detection Cutoff", hjust = 0.5, vjust = -5,size=3) +
     
     #guides(size="none")+
-    labs(x="",y="Detection Rate",color="",title="",shape="",size="") +
+    labs(x="",y="Detected Sites",color="",title="",shape="",size="") +
     scale_color_manual( values= c( "gray", rgb(101/255, 188/255, 69/255) ) ) +
     scale_shape_manual(values=c(1,13)) +
     theme_classic() +
