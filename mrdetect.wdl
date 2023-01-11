@@ -215,8 +215,8 @@ task detectSNVs {
 
 	output {
 		File snvDetectionReadsScored = "PLASMA_VS_TUMOR.svm.tsv" 
-		File? snvDetectionFinalResult = "mrdetect.results.csv"
-		File snvDetectionVAF = "mrdetect.vaf.txt"
+		File? snvDetectionFinalResult = "~{plasmaSampleName}.mrdetect.results.csv"
+		File snvDetectionVAF = "~{plasmaSampleName}.mrdetect.vaf.txt"
 	}
 
 	meta {
@@ -272,8 +272,9 @@ task snvDetectionSummary {
 		File snpcount
 		File? vafFile
 		String outputFileNamePrefix
-		String pwg_testScript = "Rscript /Volumes/cgi/scratch/fbeaudry/mrdetect/pwg_test.R"
+		String pwg_testScript = "Rscript /.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/test_filterDetect/mrdetect/MRDetectSNV/pwg_test.R"
 		String plotit = "--plot cairo"
+		String pvalue = 0.01
 		Int jobMemory = 20
 		Int threads = 1
 		Int timeout = 2
@@ -284,10 +285,11 @@ task snvDetectionSummary {
 		sampleCalls: "file of detection rate call for sample"
 		controlCalls: "array of file of detection rate calls for HBCs"
 		snpcount: "count of candidate SNPs"
-		vaffile: "vaf from primary plasma"
+		vafFile: "vaf from primary plasma"
 		outputFileNamePrefix: "Prefix for output file"
 		pwg_testScript: "command to run pwg_test.R"
 		plotit: "whether to plot result and how"
+		pvalue: "p-value for HBC error rate"
 		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
@@ -304,7 +306,7 @@ task snvDetectionSummary {
 		~{pwg_testScript}  \
 			--sampleName ~{outputFileNamePrefix} \
 			--results ~{outputFileNamePrefix}.HBCs.csv \
-			--candidateSNVsCountFile ~{SNPcount} \
+			--candidateSNVsCountFile ~{snpcount} \
 			--vafFile ~{vafFile} \
 			--pval ~{pvalue} ~{plotit} 
 
