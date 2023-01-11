@@ -55,7 +55,9 @@ workflow mrdetect {
 		input:
 		controlCalls = select_all(detectControl.snvDetectionFinalResult),
 		sampleCalls = detectSample.snvDetectionFinalResult,
-		outputFileNamePrefix = outputFileNamePrefix 
+		outputFileNamePrefix = outputFileNamePrefix,
+		snpcount = filterVCF.snpcount,
+		vafFile = detectSample.snvDetectionVAF
 	}
 
 	meta {
@@ -195,12 +197,12 @@ task detectSNVs {
 			--output_file PLASMA_VS_TUMOR.svm.tsv
 
 		~{filterAndDetectScript} \
-			-s PLASMA_VS_TUMOR.svm.tsv \
-			-v ~{tumorvcf} \
-			-V ~{tumorSampleName} -B ~{plasmaSampleName} \
-			-o ./ \
-			-b ~{blocklist} \
-			-t
+			--vcfid ~{tumorSampleName} --bamid ~{plasmaSampleName} \
+			--svm PLASMA_VS_TUMOR.svm.tsv \
+			--vcf ~{tumorvcf} \
+			--output ./ \
+			--blocklist ~{blocklist} \
+			--troubleshoot
 
 	>>>
 
@@ -267,8 +269,11 @@ task snvDetectionSummary {
 	input {
 		File? sampleCalls
 		Array[File] controlCalls
+		File snpcount
+		File? vafFile
 		String outputFileNamePrefix
-		String zscoreCutoff = 3.09
+		String pwg_testScript = "Rscript /Volumes/cgi/scratch/fbeaudry/mrdetect/pwg_test.R"
+		String plotit = "--plot cairo"
 		Int jobMemory = 20
 		Int threads = 1
 		Int timeout = 2
@@ -278,7 +283,11 @@ task snvDetectionSummary {
 	parameter_meta {
 		sampleCalls: "file of detection rate call for sample"
 		controlCalls: "array of file of detection rate calls for HBCs"
+		snpcount: "count of candidate SNPs"
+		vaffile: "vaf from primary plasma"
 		outputFileNamePrefix: "Prefix for output file"
+		pwg_testScript: "command to run pwg_test.R"
+		plotit: "whether to plot result and how"
 		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
@@ -292,6 +301,13 @@ task snvDetectionSummary {
 
 		cat ~{sampleCalls} HBCs.csv >~{outputFileNamePrefix}.HBCs.csv
 
+		~{pwg_testScript}  \
+			--sampleName ~{outputFileNamePrefix} \
+			--results ~{outputFileNamePrefix}.HBCs.csv \
+			--candidateSNVsCountFile ~{SNPcount} \
+			--vafFile ~{vafFile} \
+			--pval ~{pvalue} ~{plotit} 
+
 	>>>
 
 	runtime {
@@ -303,11 +319,13 @@ task snvDetectionSummary {
 
 	output {
 		File all_calls = "~{outputFileNamePrefix}.HBCs.csv"
+		File final_call = "~{outputFileNamePrefix}.mrdetect.txt"
 	}
 
 	meta {
 		output_meta: {
-			all_calls : "HBC mrdetect results"
+			all_calls : "HBC mrdetect results",
+			final_call : "final result"
 		}
 	}
 }
