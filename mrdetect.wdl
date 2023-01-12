@@ -76,19 +76,19 @@ workflow mrdetect {
 			}
 		]
 		output_meta: {
-			snvDetectionVAF: "VAF from SNV detection for sample",
+			pWGS_svg: "pWGS svg",
 			snvDetectionHBCResult: "Result from SNV detection incl sample HBCs",
-			snpcount: "number of SNPs in vcf after filtering",
-			final_call: "final call",
-			final_plot: "final plot"
+			final_call: "Final file of mrdetect results",
+			snvDetectionVAF: "VAF from SNV detection for sample",
+			snpcount: "number of SNPs in vcf after filtering"
 		}
 	}
 	output {
-		File? snvDetectionVAF = detectSample.snvDetectionVAF
 		File snvDetectionHBCResult = snvDetectionSummary.all_calls
+		File pWGS_svg = snvDetectionSummary.pWGS_svg
 		File snpcount = filterVCF.snpcount
+		File? snvDetectionVAF = detectSample.snvDetectionVAF
 		File final_call = snvDetectionSummary.final_call
-		File final_plot = snvDetectionSummary.final_plot
 	}
 }
 
@@ -318,16 +318,16 @@ task snvDetectionSummary {
 	}
 
 	output {
+		File pWGS_svg = "~{outputFileNamePrefix}.pWGS.svg"
 		File all_calls = "~{outputFileNamePrefix}.HBCs.csv"
 		File final_call = "~{outputFileNamePrefix}.mrdetect.txt"
-		File final_plot = "~{outputFileNamePrefix}.pWGS.svg"
 	}
 
 	meta {
 		output_meta: {
-			all_calls : "HBC mrdetect results",
-			final_call : "final result",
-			final_plot : "final plot"
+			pWGS_svg : "final plot",
+			all_calls : "HBC and sample mrdetect results",
+			final_call : "final result"
 		}
 	}
 }
