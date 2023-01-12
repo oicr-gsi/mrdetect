@@ -273,7 +273,6 @@ task snvDetectionSummary {
 		File? vafFile
 		String outputFileNamePrefix
 		String pwg_testScript = "Rscript /.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/test_filterDetect/mrdetect/MRDetectSNV/pwg_test.R"
-		String plotit = "--plot cairo"
 		String pvalue = 0.01
 		Int jobMemory = 20
 		Int threads = 1
@@ -288,7 +287,6 @@ task snvDetectionSummary {
 		vafFile: "vaf from primary plasma"
 		outputFileNamePrefix: "Prefix for output file"
 		pwg_testScript: "command to run pwg_test.R"
-		plotit: "whether to plot result and how"
 		pvalue: "p-value for HBC error rate"
 		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
@@ -308,7 +306,7 @@ task snvDetectionSummary {
 			--results ~{outputFileNamePrefix}.HBCs.csv \
 			--candidateSNVsCountFile ~{snpcount} \
 			--vafFile ~{vafFile} \
-			--pval ~{pvalue} ~{plotit} 
+			--pval ~{pvalue} 
 
 	>>>
 
@@ -322,12 +320,14 @@ task snvDetectionSummary {
 	output {
 		File all_calls = "~{outputFileNamePrefix}.HBCs.csv"
 		File final_call = "~{outputFileNamePrefix}.mrdetect.txt"
+		File final_plot = "~{outputFileNamePrefix}.pWGS.svg"
 	}
 
 	meta {
 		output_meta: {
 			all_calls : "HBC mrdetect results",
-			final_call : "final result"
+			final_call : "final result",
+			final_plot : "final plot"
 		}
 	}
 }
