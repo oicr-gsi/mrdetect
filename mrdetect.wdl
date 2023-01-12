@@ -77,14 +77,14 @@ workflow mrdetect {
 		]
 		output_meta: {
 			pWGS_svg: "pWGS svg",
-			snvDetectionHBCResult: "Result from SNV detection incl sample HBCs",
+			snvDetectionResult: "Result from SNV detection incl sample HBCs",
 			final_call: "Final file of mrdetect results",
 			snvDetectionVAF: "VAF from SNV detection for sample",
 			snpcount: "number of SNPs in vcf after filtering"
 		}
 	}
 	output {
-		File snvDetectionHBCResult = snvDetectionSummary.all_calls
+		File snvDetectionResult = snvDetectionSummary.all_calls
 		File pWGS_svg = snvDetectionSummary.pWGS_svg
 		File snpcount = filterVCF.snpcount
 		File? snvDetectionVAF = detectSample.snvDetectionVAF
@@ -176,7 +176,8 @@ task detectSNVs {
 		plasmabai: "plasma input .bai file"
 		outputFileNamePrefix: "Prefix for output file"
 		tumorvcf: "filtered tumor vcf file"
-		plasmaSampleName: "name for plasma sample"
+		plasmaSampleName: "name for plasma sample (from bam)"
+		tumorSampleName: "name for tumour sample (from vcf)"
 		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
