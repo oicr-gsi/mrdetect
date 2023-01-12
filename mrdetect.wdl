@@ -78,13 +78,17 @@ workflow mrdetect {
 		output_meta: {
 			snvDetectionVAF: "VAF from SNV detection for sample",
 			snvDetectionHBCResult: "Result from SNV detection incl sample HBCs",
-			snpcount: "number of SNPs in vcf after filtering"
+			snpcount: "number of SNPs in vcf after filtering",
+			final_call: "final call",
+			final_plot: "final plot"
 		}
 	}
 	output {
 		File? snvDetectionVAF = detectSample.snvDetectionVAF
 		File snvDetectionHBCResult = snvDetectionSummary.all_calls
 		File snpcount = filterVCF.snpcount
+		File final_call = snvDetectionSummary.final_call
+		File final_plot = snvDetectionSummary.final_plot
 	}
 }
 
@@ -159,13 +163,12 @@ task detectSNVs {
 		File tumorvcf
 		String plasmaSampleName = basename(plasmabam, ".bam")
 		String tumorSampleName = basename(tumorvcf, ".vcf")
-		String modules = "mrdetect/1.0 pwgs-blocklist/hg38.1"
+		String modules = "mrdetect/1.1.1 pwgs-blocklist/hg38.1"
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
-		String pickle = "$MRDETECT_ROOT/MRDetect-master/MRDetectSNV/trained_SVM.pkl"
+		String pickle = "$MRDETECT_ROOT/bin/MRDetectSNV/trained_SVM.pkl"
 		String blocklist = "$PWGS_BLOCKLIST_ROOT/blocklist.vcf.gz"
-		String filterAndDetectScript = "$MRDETECT_ROOT/bin/filterAndDetect"
 	}
 
 	parameter_meta {
@@ -180,7 +183,6 @@ task detectSNVs {
 		timeout: "Hours before task timeout"
 		pickle: "trained pickle for detecting real tumor reads"
 		blocklist: "list of sites to exclude from analysis, gzipped"
-		filterAndDetectScript: "location of filter and detect script"
 	}
 
 	command <<<
@@ -196,7 +198,7 @@ task detectSNVs {
 			--detections PLASMA_VS_TUMOR.tsv \
 			--output_file PLASMA_VS_TUMOR.svm.tsv
 
-		~{filterAndDetectScript} \
+		$MRDETECT_ROOT/bin/filterAndDetect \
 			--vcfid ~{tumorSampleName} --bamid ~{plasmaSampleName} \
 			--svm PLASMA_VS_TUMOR.svm.tsv \
 			--vcf ~{tumorvcf} \
@@ -272,12 +274,11 @@ task snvDetectionSummary {
 		File snpcount
 		File? vafFile
 		String outputFileNamePrefix
-		String pwg_testScript = "Rscript /.mounts/labs/CGI/scratch/fbeaudry/plasmaWG/test_filterDetect/mrdetect/MRDetectSNV/pwg_test.R"
 		String pvalue = 0.01
 		Int jobMemory = 20
 		Int threads = 1
 		Int timeout = 2
-		String modules = "mrdetect-scripts/1.1"
+		String modules = "mrdetect/1.1.1"
 	}
 
 	parameter_meta {
@@ -286,7 +287,6 @@ task snvDetectionSummary {
 		snpcount: "count of candidate SNPs"
 		vafFile: "vaf from primary plasma"
 		outputFileNamePrefix: "Prefix for output file"
-		pwg_testScript: "command to run pwg_test.R"
 		pvalue: "p-value for HBC error rate"
 		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
@@ -301,7 +301,7 @@ task snvDetectionSummary {
 
 		cat ~{sampleCalls} HBCs.csv >~{outputFileNamePrefix}.HBCs.csv
 
-		~{pwg_testScript}  \
+		$MRDETECT_ROOT/bin/pwg_test  \
 			--sampleName ~{outputFileNamePrefix} \
 			--results ~{outputFileNamePrefix}.HBCs.csv \
 			--candidateSNVsCountFile ~{snpcount} \
