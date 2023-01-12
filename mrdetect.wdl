@@ -325,7 +325,7 @@ task snvDetectionSummary {
 
 	meta {
 		output_meta: {
-			pWGS_svg : "final plot",
+			pWGS_svg : "SVG plot of mrdetect results",
 			all_calls : "HBC and sample mrdetect results",
 			final_call : "final result"
 		}
