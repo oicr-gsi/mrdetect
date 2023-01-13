@@ -166,9 +166,12 @@ task detectSNVs {
 		String modules = "mrdetect/1.1.1 pwgs-blocklist/hg38.1"
 		Int jobMemory = 64
 		Int threads = 4
-		Int timeout = 10
+		Int timeout = 20
 		String pickle = "$MRDETECT_ROOT/bin/MRDetectSNV/trained_SVM.pkl"
 		String blocklist = "$PWGS_BLOCKLIST_ROOT/blocklist.vcf.gz"
+		String pullreadsScript = "$MRDETECT_ROOT/bin/pull_reads"
+		String qualityscoreScript = "$MRDETECT_ROOT/bin/quality_score"
+		String filterAndDetectScript = "$MRDETECT_ROOT/bin/filterAndDetect"
 	}
 
 	parameter_meta {
@@ -184,22 +187,26 @@ task detectSNVs {
 		timeout: "Hours before task timeout"
 		pickle: "trained pickle for detecting real tumor reads"
 		blocklist: "list of sites to exclude from analysis, gzipped"
+		pullreadsScript: "pull_reads.py executable"
+		qualityscoreScript: "quality_score.py executable"
+		filterAndDetectScript: "filterAndDetect.py executable"
+
 	}
 
 	command <<<
 		set -euo pipefail
 
-		$MRDETECT_ROOT/bin/pull_reads \
+		~{pullreadsScript} \
 			--bam ~{plasmabam} \
 			--vcf ~{tumorvcf} \
 			--out PLASMA_VS_TUMOR.tsv
 
-		$MRDETECT_ROOT/bin/quality_score \
+		~{qualityscoreScript} \
 			--pickle-name ~{pickle} \
 			--detections PLASMA_VS_TUMOR.tsv \
 			--output_file PLASMA_VS_TUMOR.svm.tsv
 
-		$MRDETECT_ROOT/bin/filterAndDetect \
+		~{filterAndDetectScript} \
 			--vcfid ~{tumorSampleName} --bamid ~{plasmaSampleName} \
 			--svm PLASMA_VS_TUMOR.svm.tsv \
 			--vcf ~{tumorvcf} \
@@ -280,6 +287,7 @@ task snvDetectionSummary {
 		Int threads = 1
 		Int timeout = 2
 		String modules = "mrdetect/1.1.1"
+		String pwgtestscript = "$MRDETECT_ROOT/bin/pwg_test"
 	}
 
 	parameter_meta {
@@ -293,6 +301,7 @@ task snvDetectionSummary {
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
 		timeout: "Hours before task timeout"
+		pwgtestscript: "executable of pwg_test.R"
 	}
 
 	command <<<
@@ -302,7 +311,7 @@ task snvDetectionSummary {
 
 		cat ~{sampleCalls} HBCs.csv >~{outputFileNamePrefix}.HBCs.csv
 
-		$MRDETECT_ROOT/bin/pwg_test  \
+		~{pwgtestscript} \
 			--sampleName ~{outputFileNamePrefix} \
 			--results ~{outputFileNamePrefix}.HBCs.csv \
 			--candidateSNVsCountFile ~{snpcount} \
