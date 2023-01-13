@@ -129,6 +129,14 @@
                     }
                 ],
                 "type": "ALL"
+            },
+            "mrdetect.pWGS_svg": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
             }
         },
         "validators": [
