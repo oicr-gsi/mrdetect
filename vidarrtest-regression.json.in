@@ -71,6 +71,9 @@
             "mrdetect.detectControl.threads": null,
             "mrdetect.detectControl.timeout": null,
             "mrdetect.detectControl.pickle": null,
+            "mrdetect.detectControl.pullreadsScript": null,
+            "mrdetect.detectControl.qualityscoreScript": null,
+            "mrdetect.detectControl.filterAndDetectScript": null,
             "mrdetect.detectSample.plasmaSampleName": null,
             "mrdetect.detectSample.tumorSampleName": null,
             "mrdetect.detectSample.modules": null,
@@ -78,11 +81,15 @@
             "mrdetect.detectSample.threads": null,
             "mrdetect.detectSample.timeout": null,
             "mrdetect.detectSample.pickle": null,
+            "mrdetect.detectSample.pullreadsScript": null,
+            "mrdetect.detectSample.qualityscoreScript": null,
+            "mrdetect.detectSample.filterAndDetectScript": null,
             "mrdetect.snvDetectionSummary.pvalue": null,
             "mrdetect.snvDetectionSummary.jobMemory": null,
             "mrdetect.snvDetectionSummary.threads": null,
             "mrdetect.snvDetectionSummary.timeout": null,
-            "mrdetect.snvDetectionSummary.modules": null
+            "mrdetect.snvDetectionSummary.modules": null,
+            "mrdetect.snvDetectionSummary.pwgtestscript": null
      },
         "description": "mrdetect workflow test",
         "engineArguments": {
