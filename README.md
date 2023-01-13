@@ -54,29 +54,36 @@ Parameter|Value|Default|Description
 `detectControl.modules`|String|"mrdetect/1.1.1 pwgs-blocklist/hg38.1"|Required environment modules
 `detectControl.jobMemory`|Int|64|Memory allocated for this job (GB)
 `detectControl.threads`|Int|4|Requested CPU threads
-`detectControl.timeout`|Int|10|Hours before task timeout
+`detectControl.timeout`|Int|20|Hours before task timeout
 `detectControl.pickle`|String|"$MRDETECT_ROOT/bin/MRDetectSNV/trained_SVM.pkl"|trained pickle for detecting real tumor reads
 `detectControl.blocklist`|String|"$PWGS_BLOCKLIST_ROOT/blocklist.vcf.gz"|list of sites to exclude from analysis, gzipped
+`detectControl.pullreadsScript`|String|"$MRDETECT_ROOT/bin/pull_reads"|pull_reads.py executable
+`detectControl.qualityscoreScript`|String|"$MRDETECT_ROOT/bin/quality_score"|quality_score.py executable
+`detectControl.filterAndDetectScript`|String|"$MRDETECT_ROOT/bin/filterAndDetect"|filterAndDetect.py executable
 `detectSample.plasmaSampleName`|String|basename(plasmabam,".bam")|name for plasma sample (from bam)
 `detectSample.tumorSampleName`|String|basename(tumorvcf,".vcf")|name for tumour sample (from vcf)
 `detectSample.modules`|String|"mrdetect/1.1.1 pwgs-blocklist/hg38.1"|Required environment modules
 `detectSample.jobMemory`|Int|64|Memory allocated for this job (GB)
 `detectSample.threads`|Int|4|Requested CPU threads
-`detectSample.timeout`|Int|10|Hours before task timeout
+`detectSample.timeout`|Int|20|Hours before task timeout
 `detectSample.pickle`|String|"$MRDETECT_ROOT/bin/MRDetectSNV/trained_SVM.pkl"|trained pickle for detecting real tumor reads
 `detectSample.blocklist`|String|"$PWGS_BLOCKLIST_ROOT/blocklist.vcf.gz"|list of sites to exclude from analysis, gzipped
+`detectSample.pullreadsScript`|String|"$MRDETECT_ROOT/bin/pull_reads"|pull_reads.py executable
+`detectSample.qualityscoreScript`|String|"$MRDETECT_ROOT/bin/quality_score"|quality_score.py executable
+`detectSample.filterAndDetectScript`|String|"$MRDETECT_ROOT/bin/filterAndDetect"|filterAndDetect.py executable
 `snvDetectionSummary.pvalue`|String|0.01|p-value for HBC error rate
 `snvDetectionSummary.jobMemory`|Int|20|Memory allocated for this job (GB)
 `snvDetectionSummary.threads`|Int|1|Requested CPU threads
 `snvDetectionSummary.timeout`|Int|2|Hours before task timeout
 `snvDetectionSummary.modules`|String|"mrdetect/1.1.1"|Required environment modules
+`snvDetectionSummary.pwgtestscript`|String|"$MRDETECT_ROOT/bin/pwg_test"|executable of pwg_test.R
 
 
 ### Outputs
 
 Output | Type | Description
 ---|---|---
-`snvDetectionHBCResult`|File|Result from SNV detection incl sample HBCs
+`snvDetectionResult`|File|Result from SNV detection incl sample HBCs
 `pWGS_svg`|File|pWGS svg
 `snpcount`|File|number of SNPs in vcf after filtering
 `snvDetectionVAF`|File?|VAF from SNV detection for sample
