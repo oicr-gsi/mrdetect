@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 0.3 - unreleased
+## 1.0.3 - 2023-01-16
 - moved mrdetect algorithm scripts to bitbucket
 - seperated filterVCF function from detectSNVs
 - added SNP.count and VAF files
