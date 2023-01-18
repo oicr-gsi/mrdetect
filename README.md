@@ -71,7 +71,7 @@ Parameter|Value|Default|Description
 `detectSample.pullreadsScript`|String|"$MRDETECT_ROOT/bin/pull_reads"|pull_reads.py executable
 `detectSample.qualityscoreScript`|String|"$MRDETECT_ROOT/bin/quality_score"|quality_score.py executable
 `detectSample.filterAndDetectScript`|String|"$MRDETECT_ROOT/bin/filterAndDetect"|filterAndDetect.py executable
-`snvDetectionSummary.pvalue`|String|0.01|p-value for HBC error rate
+`snvDetectionSummary.pvalue`|String|0.00001|p-value for HBC error rate
 `snvDetectionSummary.jobMemory`|Int|20|Memory allocated for this job (GB)
 `snvDetectionSummary.threads`|Int|1|Requested CPU threads
 `snvDetectionSummary.timeout`|Int|2|Hours before task timeout
