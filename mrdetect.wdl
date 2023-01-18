@@ -282,7 +282,7 @@ task snvDetectionSummary {
 		File snpcount
 		File? vafFile
 		String outputFileNamePrefix
-		String pvalue = 0.01
+		String pvalue = "0.00001"
 		Int jobMemory = 20
 		Int threads = 1
 		Int timeout = 2

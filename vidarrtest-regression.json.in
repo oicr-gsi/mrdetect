@@ -84,7 +84,7 @@
             "mrdetect.detectSample.pullreadsScript": null,
             "mrdetect.detectSample.qualityscoreScript": null,
             "mrdetect.detectSample.filterAndDetectScript": null,
-            "mrdetect.snvDetectionSummary.pvalue": null,
+            "mrdetect.snvDetectionSummary.pvalue": "0.01",
             "mrdetect.snvDetectionSummary.jobMemory": null,
             "mrdetect.snvDetectionSummary.threads": null,
             "mrdetect.snvDetectionSummary.timeout": null,
