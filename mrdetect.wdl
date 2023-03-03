@@ -129,9 +129,11 @@ task filterVCF {
 		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome} |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
-		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{tumorSampleName}.SNP.vcf
-
-		awk '$1 !~ "#" {print}' ~{tumorSampleName}.SNP.vcf | wc -l >SNP.count.txt
+		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > SNP.vcf
+		$BCFTOOLS_ROOT/bin/bcftools view --header-only SNP.vcf > ~{tumorSampleName}.SNP.vcf
+		$BCFTOOLS_ROOT/bin/bcftools view --no-header SNP.vcf | awk '{printf("%f\t%s\n",rand(),$0);}' | sort -t $'\t'  -T . -k1,1g | head -n 4000 | cut -f 2- >> ~{tumorSampleName}.SNP.vcf
+		touch SNP.count.txt
+		awk '$1 !~ "#" {print}' ~{tumorSampleName}.SNP.vcf | wc -l > SNP.count.txt
 
 	>>>
 
