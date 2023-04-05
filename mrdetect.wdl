@@ -132,9 +132,8 @@ task filterVCF {
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > SNP.vcf
 		$BCFTOOLS_ROOT/bin/bcftools view --no-header SNP.vcf | wc -l >SNP.original.count.txt
 		$BCFTOOLS_ROOT/bin/bcftools view --header-only SNP.vcf > ~{tumorSampleName}.SNP.vcf
-		$BCFTOOLS_ROOT/bin/bcftools view --no-header SNP.vcf | awk '{printf("%f\t%s\n",rand(),$0);}' | sort -t $'\t'  -T . -k1,1g | head -n 4000 | cut -f 2- >> ~{tumorSampleName}.SNP.vcf
-		echo "4000" >SNP.count.txt
-		#$BCFTOOLS_ROOT/bin/bcftools view --no-header ~{tumorSampleName}.SNP.vcf | wc -l >SNP.count.txt
+		$BCFTOOLS_ROOT/bin/bcftools view --no-header SNP.vcf | awk '{printf("%f\t%s\n",rand(),$0);}' | sort -t $'\t'  -T . -k1,1g | awk '(NR<=4000)' | cut -f 2- >> ~{tumorSampleName}.SNP.vcf
+		$BCFTOOLS_ROOT/bin/bcftools view --no-header ~{tumorSampleName}.SNP.vcf | wc -l >SNP.count.txt
 
 	>>>
 
