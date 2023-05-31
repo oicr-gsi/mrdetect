@@ -2,12 +2,13 @@ version 1.0
 
 workflow mrdetect {
 	input {
-		File plasmabam
-		File plasmabai
-		String outputFileNamePrefix
+		File? plasmabam
+		File? plasmabai
+		String? outputFileNamePrefix
 		String tumorSampleName
 		File tumorvcf
 		File tumorvcfindex
+		Boolean full_analysis_mode = true
 		String controlFileList = "/.mounts/labs/gsi/src/pwgs_hbc/1.0/HBC.bam.list"
 	}
 
@@ -28,36 +29,39 @@ workflow mrdetect {
 		tumorSampleName = tumorSampleName
 	}
 
-	call parseControls {
-		input:
-		controlFileList = controlFileList
-	}
-
-	scatter (control in parseControls.controlFiles) {
-		call detectSNVs as detectControl {
+	if(full_analysis_mode) {
+		
+		call parseControls {
 			input:
-			plasmabam = control[0],
-			plasmabai = control[1],
+			controlFileList = controlFileList
+		}
+
+		scatter (control in parseControls.controlFiles) {
+			call detectSNVs as detectControl {
+				input:
+				plasmabam = control[0],
+				plasmabai = control[1],
+				tumorvcf = filterVCF.filteredvcf,
+				outputFileNamePrefix = outputFileNamePrefix
+			}
+		}
+
+		call detectSNVs as detectSample {
+			input:
+			plasmabam = plasmabam,
+			plasmabai = plasmabai,
 			tumorvcf = filterVCF.filteredvcf,
 			outputFileNamePrefix = outputFileNamePrefix
 		}
-	}
 
-	call detectSNVs as detectSample {
-		input:
-		plasmabam = plasmabam,
-		plasmabai = plasmabai,
-		tumorvcf = filterVCF.filteredvcf,
-		outputFileNamePrefix = outputFileNamePrefix
-	}
-
-	call snvDetectionSummary {
-		input:
-		controlCalls = select_all(detectControl.snvDetectionFinalResult),
-		sampleCalls = detectSample.snvDetectionFinalResult,
-		outputFileNamePrefix = outputFileNamePrefix,
-		snpcount = filterVCF.snpcount,
-		vafFile = detectSample.snvDetectionVAF
+		call snvDetectionSummary {
+			input:
+			controlCalls = select_all(detectControl.snvDetectionFinalResult),
+			sampleCalls = detectSample.snvDetectionFinalResult,
+			outputFileNamePrefix = outputFileNamePrefix,
+			snpcount = filterVCF.snpcount,
+			vafFile = detectSample.snvDetectionVAF
+		}
 	}
 
 	meta {
@@ -84,11 +88,11 @@ workflow mrdetect {
 		}
 	}
 	output {
-		File snvDetectionResult = snvDetectionSummary.all_calls
-		File pWGS_svg = snvDetectionSummary.pWGS_svg
+		File? snvDetectionResult = snvDetectionSummary.all_calls
+		File? pWGS_svg = snvDetectionSummary.pWGS_svg
 		File snpcount = filterVCF.snpcount
 		File? snvDetectionVAF = detectSample.snvDetectionVAF
-		File final_call = snvDetectionSummary.final_call
+		File? final_call = snvDetectionSummary.final_call
 	}
 }
 
