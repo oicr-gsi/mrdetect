@@ -4,7 +4,7 @@ workflow mrdetect {
 	input {
 		File? plasmabam
 		File? plasmabai
-		String? outputFileNamePrefix
+		String outputFileNamePrefix
 		String tumorSampleName
 		File tumorvcf
 		File tumorvcfindex
@@ -161,11 +161,11 @@ task filterVCF {
 
 task detectSNVs {
 	input {
-		File plasmabam
-		File plasmabai
+		File? plasmabam
+		File? plasmabai
 		String outputFileNamePrefix
 		File tumorvcf
-		String plasmaSampleName = basename(plasmabam, ".bam")
+		String? plasmaSampleName 
 		String tumorSampleName = basename(tumorvcf, ".vcf")
 		String modules = "mrdetect/1.1.1 pwgs-blocklist/hg38.1"
 		Int jobMemory = 64
@@ -200,6 +200,8 @@ task detectSNVs {
 	command <<<
 		set -euo pipefail
 
+		plasmaSampleName = basename(plasmabam)
+
 		~{pullreadsScript} \
 			--bam ~{plasmabam} \
 			--vcf ~{tumorvcf} \
@@ -228,9 +230,9 @@ task detectSNVs {
 	}
 
 	output {
-		File snvDetectionReadsScored = "PLASMA_VS_TUMOR.svm.tsv" 
+		File? snvDetectionReadsScored = "PLASMA_VS_TUMOR.svm.tsv" 
 		File? snvDetectionFinalResult = "~{plasmaSampleName}.mrdetect.results.csv"
-		File snvDetectionVAF = "~{plasmaSampleName}.mrdetect.vaf.txt"
+		File? snvDetectionVAF = "~{plasmaSampleName}.mrdetect.vaf.txt"
 	}
 
 	meta {
