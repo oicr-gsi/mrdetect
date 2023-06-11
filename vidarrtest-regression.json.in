@@ -93,10 +93,38 @@
                 ],
                 "type": "ALL"
             },
-            "mrdetect.snvDetectionResult": null,
-            "mrdetect.pWGS_svg": null,
-            "mrdetect.snvDetectionVAF": null,
-            "mrdetect.final_cal": null
+            "mrdetect.snvDetectionResult": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_filter_only_Test_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "mrdetect.pWGS_svg": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_filter_only_Test_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "mrdetect.snvDetectionVAF": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_filter_only_Test_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            },
+            "mrdetect.final_cal": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_filter_only_Test_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            }
         },
         "validators": [
             {
@@ -247,7 +275,14 @@
                 ],
                 "type": "ALL"
             },
-            "mrdetect.filteredvcf": null
+            "mrdetect.filteredvcf": {
+                "contents": [
+                    {
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
+                    }
+                ],
+                "type": "ALL"
+            }
         },
         "validators": [
             {
