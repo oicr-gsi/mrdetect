@@ -25,6 +25,8 @@
                 },
                 "type": "EXTERNAL"
             },
+            "mrdetect.plasmabam": null,
+            "mrdetect.plasmabai": null,
             "mrdetect.full_analysis_mode": false,
             "mrdetect.detectSample.blocklist": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
             "mrdetect.detectControl.blocklist": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
@@ -90,7 +92,11 @@
                     }
                 ],
                 "type": "ALL"
-            }
+            },
+            "mrdetect.snvDetectionResult": null,
+            "mrdetect.pWGS_svg": null,
+            "mrdetect.snvDetectionVAF": null,
+            "mrdetect.final_cal": null
         },
         "validators": [
             {
@@ -240,7 +246,8 @@
                     }
                 ],
                 "type": "ALL"
-            }
+            },
+            "mrdetect.filteredvcf": null
         },
         "validators": [
             {
