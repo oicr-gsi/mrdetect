@@ -117,7 +117,7 @@
                 ],
                 "type": "ALL"
             },
-            "mrdetect.final_cal": {
+            "mrdetect.final_call": {
                 "contents": [
                     {
                         "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_filter_only_Test_@JENKINSID@"
