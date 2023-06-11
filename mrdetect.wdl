@@ -93,6 +93,7 @@ workflow mrdetect {
 		File snpcount = filterVCF.snpcount
 		File? snvDetectionVAF = detectSample.snvDetectionVAF
 		File? final_call = snvDetectionSummary.final_call
+		File? filteredvcf = filterVCF.filteredvcf
 	}
 }
 
