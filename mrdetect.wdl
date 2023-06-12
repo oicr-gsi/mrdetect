@@ -41,6 +41,7 @@ workflow mrdetect {
 				input:
 				plasmabam = control[0],
 				plasmabai = control[1],
+				plasmaSampleName = basename(control[0], ".bam"),
 				tumorvcf = filterVCF.filteredvcf,
 				outputFileNamePrefix = outputFileNamePrefix
 			}
@@ -166,6 +167,7 @@ task detectSNVs {
 		File? plasmabai
 		String outputFileNamePrefix
 		File tumorvcf
+		String? plasmaSampleName 
 		String tumorSampleName = basename(tumorvcf, ".vcf")
 		String modules = "mrdetect/1.1.1 pwgs-blocklist/hg38.1"
 		Int jobMemory = 64
@@ -183,6 +185,7 @@ task detectSNVs {
 		plasmabai: "plasma input .bai file"
 		outputFileNamePrefix: "Prefix for output file"
 		tumorvcf: "filtered tumor vcf file"
+		plasmaSampleName: "name for plasma sample (from bam)"
 		tumorSampleName: "name for tumour sample (from vcf)"
 		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
@@ -199,8 +202,6 @@ task detectSNVs {
 	command <<<
 		set -euo pipefail
 
-		plasmaSampleName=$(basename ~{plasmabam})
-
 		~{pullreadsScript} \
 			--bam ~{plasmabam} \
 			--vcf ~{tumorvcf} \
@@ -212,7 +213,7 @@ task detectSNVs {
 			--output_file PLASMA_VS_TUMOR.svm.tsv
 
 		~{filterAndDetectScript} \
-			--vcfid ~{tumorSampleName} --bamid $plasmaSampleName \
+			--vcfid ~{tumorSampleName} --bamid ~{plasmaSampleName} \
 			--svm PLASMA_VS_TUMOR.svm.tsv \
 			--vcf ~{tumorvcf} \
 			--output ./ \
