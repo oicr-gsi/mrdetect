@@ -4,6 +4,7 @@ workflow mrdetect {
 	input {
 		File? plasmabam
 		File? plasmabai
+		String? plasmaSampleName 
 		String outputFileNamePrefix
 		String tumorSampleName
 		File tumorvcf
@@ -15,6 +16,7 @@ workflow mrdetect {
 	parameter_meta {
 		plasmabam: "plasma input .bam file"
 		plasmabai: "plasma input .bai file"
+		plasmaSampleName: "name for plasma sample (from bam)"
 		tumorvcf: "tumor vcf file, bgzip"
 		tumorvcfindex: "tumor vcf index file"
 		outputFileNamePrefix: "Prefix for output file"
@@ -51,6 +53,7 @@ workflow mrdetect {
 			input:
 			plasmabam = plasmabam,
 			plasmabai = plasmabai,
+			plasmaSampleName = plasmaSampleName,
 			tumorvcf = filterVCF.filteredvcf,
 			outputFileNamePrefix = outputFileNamePrefix
 		}
