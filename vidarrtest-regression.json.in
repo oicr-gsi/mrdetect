@@ -130,7 +130,7 @@
             {
                 "metrics_calculate": "@CHECKOUT@/tests/filter_only_calculate.sh",
                 "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.1/output_metrics/filter_only_metrics",
+                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.0.5/output_metrics/filter_only_metrics",
                 "type": "script"
             }  
         ]
