@@ -214,7 +214,7 @@ task detectSNVs {
 			--output_file PLASMA_VS_TUMOR.svm.tsv
 
 		~{filterAndDetectScript} \
-			--vcfid ~{tumorSampleName} --bamid ~{plasmaSampleName} \
+			--vcfid ~{tumorSampleName} --bamid $plasmaSampleName \
 			--svm PLASMA_VS_TUMOR.svm.tsv \
 			--vcf ~{tumorvcf} \
 			--output ./ \
