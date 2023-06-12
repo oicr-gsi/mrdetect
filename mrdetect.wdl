@@ -166,7 +166,6 @@ task detectSNVs {
 		File? plasmabai
 		String outputFileNamePrefix
 		File tumorvcf
-		String? plasmaSampleName 
 		String tumorSampleName = basename(tumorvcf, ".vcf")
 		String modules = "mrdetect/1.1.1 pwgs-blocklist/hg38.1"
 		Int jobMemory = 64
@@ -184,7 +183,6 @@ task detectSNVs {
 		plasmabai: "plasma input .bai file"
 		outputFileNamePrefix: "Prefix for output file"
 		tumorvcf: "filtered tumor vcf file"
-		plasmaSampleName: "name for plasma sample (from bam)"
 		tumorSampleName: "name for tumour sample (from vcf)"
 		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
