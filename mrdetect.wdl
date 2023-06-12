@@ -4,7 +4,8 @@ workflow mrdetect {
 	input {
 		File? plasmabam
 		File? plasmabai
-		String? outputFileNamePrefix
+		String? plasmaSampleName 
+		String outputFileNamePrefix
 		String tumorSampleName
 		File tumorvcf
 		File tumorvcfindex
@@ -15,6 +16,7 @@ workflow mrdetect {
 	parameter_meta {
 		plasmabam: "plasma input .bam file"
 		plasmabai: "plasma input .bai file"
+		plasmaSampleName: "name for plasma sample (from bam)"
 		tumorvcf: "tumor vcf file, bgzip"
 		tumorvcfindex: "tumor vcf index file"
 		outputFileNamePrefix: "Prefix for output file"
@@ -41,6 +43,7 @@ workflow mrdetect {
 				input:
 				plasmabam = control[0],
 				plasmabai = control[1],
+				plasmaSampleName = basename(control[0], ".bam"),
 				tumorvcf = filterVCF.filteredvcf,
 				outputFileNamePrefix = outputFileNamePrefix
 			}
@@ -50,6 +53,7 @@ workflow mrdetect {
 			input:
 			plasmabam = plasmabam,
 			plasmabai = plasmabai,
+			plasmaSampleName = plasmaSampleName,
 			tumorvcf = filterVCF.filteredvcf,
 			outputFileNamePrefix = outputFileNamePrefix
 		}
@@ -93,6 +97,7 @@ workflow mrdetect {
 		File snpcount = filterVCF.snpcount
 		File? snvDetectionVAF = detectSample.snvDetectionVAF
 		File? final_call = snvDetectionSummary.final_call
+		File? filteredvcf = filterVCF.filteredvcf
 	}
 }
 
@@ -161,11 +166,11 @@ task filterVCF {
 
 task detectSNVs {
 	input {
-		File plasmabam
-		File plasmabai
+		File? plasmabam
+		File? plasmabai
 		String outputFileNamePrefix
 		File tumorvcf
-		String plasmaSampleName = basename(plasmabam, ".bam")
+		String? plasmaSampleName 
 		String tumorSampleName = basename(tumorvcf, ".vcf")
 		String modules = "mrdetect/1.1.1 pwgs-blocklist/hg38.1"
 		Int jobMemory = 64
@@ -228,9 +233,9 @@ task detectSNVs {
 	}
 
 	output {
-		File snvDetectionReadsScored = "PLASMA_VS_TUMOR.svm.tsv" 
+		File? snvDetectionReadsScored = "PLASMA_VS_TUMOR.svm.tsv" 
 		File? snvDetectionFinalResult = "~{plasmaSampleName}.mrdetect.results.csv"
-		File snvDetectionVAF = "~{plasmaSampleName}.mrdetect.vaf.txt"
+		File? snvDetectionVAF = "~{plasmaSampleName}.mrdetect.vaf.txt"
 	}
 
 	meta {
