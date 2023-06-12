@@ -201,7 +201,7 @@ task detectSNVs {
 	command <<<
 		set -euo pipefail
 
-		plasmaSampleName=$(basename $plasmabam)
+		plasmaSampleName=$(basename ~{plasmabam})
 
 		~{pullreadsScript} \
 			--bam ~{plasmabam} \
