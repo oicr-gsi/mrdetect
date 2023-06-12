@@ -186,6 +186,7 @@
             },
             "mrdetect.plasmabam": null,
             "mrdetect.plasmabai": null,
+            "mrdetect.plasmaSampleName": null,
             "mrdetect.full_analysis_mode": false,
             "mrdetect.detectSample.blocklist": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
             "mrdetect.detectControl.blocklist": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
