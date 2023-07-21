@@ -120,7 +120,7 @@ task filterVCF {
 		tumorvcf: "tumor vcf file, bgzip"
 		tumorvcfindex: "tumor vcf index file"
 		tumorSampleName: "ID for WGS tumor sample"
-		tumorVCFfilter: "set of filter calls to incl. in tumor VCF (any line with these flags will be included"
+		tumorVCFfilter: "set of filter calls to exclude in tumor VCF (any line with these flags will be excluded"
 		tumorVAF: "Variant Allele Frequency for tumor VCF"
 		genome: "Path to loaded genome .fa"
 		difficultRegions: "Path to .bed excluding difficult regions, string must include the flag --regions-file "
