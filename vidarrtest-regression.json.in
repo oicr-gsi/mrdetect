@@ -235,7 +235,7 @@
           "write_to_cache": false,
           "read_from_cache": false
         },
-        "id": "filter_only Test",
+        "id": "filter_only_Test",
         "metadata": {
             "mrdetect.filteredvcf": {
                 "contents": [
