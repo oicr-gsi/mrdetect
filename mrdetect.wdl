@@ -22,6 +22,7 @@ workflow mrdetect {
 		outputFileNamePrefix: "Prefix for output file"
 		tumorSampleName: "ID for WGS tumor sample, must match .vcf header"
 		controlFileList: "tab seperated list of bam and bai files for healthy blood controls"
+                full_analysis_mode: "Enable full analysis mode with this flag"
 	}
 
 	call filterVCF {
@@ -72,25 +73,38 @@ workflow mrdetect {
 		author: "Felix Beaudry"
 		email: "fbeaudry@oicr.on.ca"
 		description: "Workflow for MRdetect, detection of Minimal Residual Disease from paired tumor-plasma sample"
-		dependencies:
-		[
+		    dependencies: [
 			{
-				name: "mrdetect/1.0",
-				url: "https://ctl.cornell.edu/technology/mrdetect-license-request/"
+			name: "mrdetect/1.0",
+			url: "https://ctl.cornell.edu/technology/mrdetect-license-request/"
 			},
 			{
-				name: "bcftools/1.9",
-				url: "https://github.com/samtools/bcftools"
-			}
-		]
-		output_meta: {
-			pWGS_svg: "pWGS svg",
-			snvDetectionResult: "Result from SNV detection incl sample HBCs",
-			final_call: "Final file of mrdetect results",
-			snvDetectionVAF: "VAF from SNV detection for sample",
-			snpcount: "number of SNPs in vcf after filtering"
+			name: "bcftools/1.9",
+			url: "https://github.com/samtools/bcftools"
+			}]
+		    output_meta: {
+		    pWGS_svg: {
+			description: "pWGS svg",
+			vidarr_label: "pWGS_svg"
+		    },
+		    snvDetectionResult: {
+			description: "Result from SNV detection incl sample HBCs",
+			vidarr_label: "snvDetectionResult"
+		    },
+		    final_call: {
+			description: "Final file of mrdetect results",
+			vidarr_label: "final_call"
+		    },
+		    snvDetectionVAF: {
+			description: "VAF from SNV detection for sample",
+			vidarr_label: "snvDetectionVAF"
+		    },
+		    snpcount: {
+			description: "number of SNPs in vcf after filtering",
+			vidarr_label: "snpcount"
+		    }
 		}
-	}
+		}
 	output {
 		File? snvDetectionResult = snvDetectionSummary.all_calls
 		File? pWGS_svg = snvDetectionSummary.pWGS_svg
