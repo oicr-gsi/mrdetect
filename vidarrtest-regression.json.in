@@ -233,7 +233,7 @@
           "write_to_cache": false,
           "read_from_cache": false
         },
-        "id": "filter_only Test",
+        "id": "mrdetect_filter_only_test",
         "metadata": {
             "mrdetect.filteredvcf": {
                 "contents": [
