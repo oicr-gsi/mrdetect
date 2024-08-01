@@ -80,61 +80,65 @@ Parameter|Value|Default|Description
 
 ### Outputs
 
-Output | Type | Description
----|---|---
-`snvDetectionResult`|File?|{'description': 'Result from SNV detection incl sample HBCs', 'vidarr_label': 'snvDetectionResult'}
-`pWGS_svg`|File?|{'description': 'pWGS svg', 'vidarr_label': 'pWGS_svg'}
-`snpcount`|File|{'description': 'number of SNPs in vcf after filtering', 'vidarr_label': 'snpcount'}
-`snvDetectionVAF`|File?|{'description': 'VAF from SNV detection for sample', 'vidarr_label': 'snvDetectionVAF'}
-`final_call`|File?|{'description': 'Final file of mrdetect results', 'vidarr_label': 'final_call'}
-`filteredvcf`|File?|Filtered vcf
+Output | Type | Description | Labels
+---|---|---|---
+`snvDetectionResult`|File?|Result from SNV detection incl sample HBCs|vidarr_label: snvDetectionResult
+`pWGS_svg`|File?|pWGS svg|vidarr_label: pWGS_svg
+`snpcount`|File|number of SNPs in vcf after filtering|vidarr_label: snpcount
+`snvDetectionVAF`|File?|VAF from SNV detection for sample|vidarr_label: snvDetectionVAF
+`final_call`|File?|Final file of mrdetect results|vidarr_label: final_call
+`filteredvcf`|File?|Filtered vcf|
 
 
 ## Commands
- This section lists commands run by the MRDetect workflow.
+This section lists commands run by the MRDetect workflow.
  
- ### filterVCF
- Performs vcf Filtering, followed by processing of individual `MRDetect` calls. Filters include removing difficult regions (optional), splitting multiallelic loci into one allele per line, removing indels, removing loci by quality metrics (set by `tumorVCFfilter`) and finally removing SNPs by VAF (set by `tumorVAF`).
+### filterVCF
+Performs vcf Filtering, followed by processing of individual `MRDetect` calls. Filters include removing difficult regions (optional), splitting multiallelic loci into one allele per line, removing indels, removing loci by quality metrics (set by `tumorVCFfilter`) and finally removing SNPs by VAF (set by `tumorVAF`).
+
+```
  
- 		$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorbasename} ~{difficultRegions} ~{tumorvcf} |\
- 		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome}  |\
- 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
- 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
- 		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" >~{tumorbasename}.SNP.vcf
+	$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorbasename} ~{difficultRegions} ~{tumorvcf} |\
+	$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome}  |\
+	$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
+	$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
+	$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" >~{tumorbasename}.SNP.vcf
+``` 
+### parseControls
+
+This command processes the list of control files as paired bam/bai files and prints them out for detection.
  
- ### parseControls
- This command processes the list of control files as paired bam/bai files and prints them out for detection.
+### detectSNVs
+
+`MRDetect` proceed across three steps. This task is run through for the sample and for all the controls.
  
- ### detectSNVs
- `MRDetect` proceed across three steps. This task is run through for the sample and for all the controls.
+* `pull_reads` takes any reads in the plasma .bam that corresponds to a SNP in the solid-tumour .vcf. 
+* `quality_score` assesses the likelihood that any read is plasma based on the quality score and the trained pickle. 
+* `filterAndDetect` keeps reads with high plasma likehood and removed those for which SNPs are in the blocklist. 
  
- 1- `pull_reads` takes any reads in the plasma .bam that corresponds to a SNP in the solid-tumour .vcf. 
+```
+	$MRDETECT_ROOT/bin/pull_reads \
+		--bam ~{plasmabam} \
+		--vcf ~{tumorvcf} \
+		--out PLASMA_VS_TUMOR.tsv
+
+	$MRDETECT_ROOT/bin/quality_score \
+		--pickle-name ~{pickle} \
+		--detections PLASMA_VS_TUMOR.tsv \
+		--output_file PLASMA_VS_TUMOR.svm.tsv
+
+	$MRDETECT_ROOT/bin/filterAndDetect \
+		--vcfid ~{tumorSampleName} --bamid ~{plasmaSampleName} \
+		--svm PLASMA_VS_TUMOR.svm.tsv \
+		--vcf ~{tumorvcf} \
+		--output ./ \
+		--blocklist ~{blocklist} \
+		--troubleshoot
+```
+	
+### snvDetectionSummary
  
- 2- `quality_score` assesses the likelihood that any read is plasma based on the quality score and the trained pickle. 
- 
- 3- `filterAndDetect` keeps reads with high plasma likehood and removed those for which SNPs are in the blocklist. 
- 
- 		$MRDETECT_ROOT/bin/pull_reads \
- 			--bam ~{plasmabam} \
- 			--vcf ~{tumorvcf} \
- 			--out PLASMA_VS_TUMOR.tsv
- 
- 		$MRDETECT_ROOT/bin/quality_score \
- 			--pickle-name ~{pickle} \
- 			--detections PLASMA_VS_TUMOR.tsv \
- 			--output_file PLASMA_VS_TUMOR.svm.tsv
- 
- 		$MRDETECT_ROOT/bin/filterAndDetect \
- 			--vcfid ~{tumorSampleName} --bamid ~{plasmaSampleName} \
- 			--svm PLASMA_VS_TUMOR.svm.tsv \
- 			--vcf ~{tumorvcf} \
- 			--output ./ \
- 			--blocklist ~{blocklist} \
- 			--troubleshoot
- 		
- ### snvDetectionSummary
- 
- Finally, `pwg_test.R` will process the controls and the sample to make a final call. 	
+Finally, `pwg_test.R` will process the controls and the sample to make a final call. 	
  		
  		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' >~{samplebasename}.HBCs.txt
  
