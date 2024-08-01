@@ -22,9 +22,6 @@ java -jar cromwell.jar run mrdetect.wdl --inputs inputs.json
 #### Required workflow parameters:
 Parameter|Value|Description
 ---|---|---
-`plasmabam`|File|plasma input .bam file
-`plasmabai`|File|plasma input .bai file
-`outputFileNamePrefix`|String|Prefix for output file
 `tumorSampleName`|String|ID for WGS tumor sample, must match .vcf header
 `tumorvcf`|File|tumor vcf file, bgzip
 `tumorvcfindex`|File|tumor vcf index file
@@ -33,13 +30,17 @@ Parameter|Value|Description
 #### Optional workflow parameters:
 Parameter|Value|Default|Description
 ---|---|---|---
+`plasmabam`|File?|None|plasma input .bam file
+`plasmabai`|File?|None|plasma input .bai file
+`plasmaSampleName`|String?|None|name for plasma sample (from bam)
+`full_analysis_mode`|Boolean|true|Enable full analysis mode with this flag
 `controlFileList`|String|"/.mounts/labs/gsi/src/pwgs_hbc/1.0/HBC.bam.list"|tab seperated list of bam and bai files for healthy blood controls
 
 
 #### Optional task parameters:
 Parameter|Value|Default|Description
 ---|---|---|---
-`filterVCF.tumorVCFfilter`|String|"FILTER~'haplotype' | FILTER~'clustered_events' | FILTER~'slippage' | FILTER~'weak_evidence' | FILTER~'strand_bias' | FILTER~'position' | FILTER~'normal_artifact' | FILTER~'multiallelic' | FILTER~'map_qual' | FILTER~'germline' | FILTER~'fragment' | FILTER~'contamination' | FILTER~'base_qual'"|set of filter calls to incl. in tumor VCF (any line with these flags will be included
+`filterVCF.tumorVCFfilter`|String|"FILTER~'haplotype' | FILTER~'clustered_events' | FILTER~'slippage' | FILTER~'weak_evidence' | FILTER~'strand_bias' | FILTER~'position' | FILTER~'normal_artifact' | FILTER~'multiallelic' | FILTER~'map_qual' | FILTER~'germline' | FILTER~'fragment' | FILTER~'contamination' | FILTER~'base_qual'"|set of filter calls to exclude in tumor VCF (any line with these flags will be excluded
 `filterVCF.tumorVAF`|String|"0.1"|Variant Allele Frequency for tumor VCF
 `filterVCF.genome`|String|"$HG38_ROOT/hg38_random.fa"|Path to loaded genome .fa
 `filterVCF.difficultRegions`|String|"--regions-file $HG38_DAC_EXCLUSION_ROOT/hg38-dac-exclusion.v2.bed"|Path to .bed excluding difficult regions, string must include the flag --regions-file 
@@ -49,7 +50,6 @@ Parameter|Value|Default|Description
 `filterVCF.timeout`|Int|10|Hours before task timeout
 `parseControls.jobMemory`|Int|4|Memory for this task in GB
 `parseControls.timeout`|Int|12|Timeout in hours, needed to override imposed limits
-`detectControl.plasmaSampleName`|String|basename(plasmabam,".bam")|name for plasma sample (from bam)
 `detectControl.tumorSampleName`|String|basename(tumorvcf,".vcf")|name for tumour sample (from vcf)
 `detectControl.modules`|String|"mrdetect/1.1.1 pwgs-blocklist/hg38.1"|Required environment modules
 `detectControl.jobMemory`|Int|64|Memory allocated for this job (GB)
@@ -60,7 +60,6 @@ Parameter|Value|Default|Description
 `detectControl.pullreadsScript`|String|"$MRDETECT_ROOT/bin/pull_reads"|pull_reads.py executable
 `detectControl.qualityscoreScript`|String|"$MRDETECT_ROOT/bin/quality_score"|quality_score.py executable
 `detectControl.filterAndDetectScript`|String|"$MRDETECT_ROOT/bin/filterAndDetect"|filterAndDetect.py executable
-`detectSample.plasmaSampleName`|String|basename(plasmabam,".bam")|name for plasma sample (from bam)
 `detectSample.tumorSampleName`|String|basename(tumorvcf,".vcf")|name for tumour sample (from vcf)
 `detectSample.modules`|String|"mrdetect/1.1.1 pwgs-blocklist/hg38.1"|Required environment modules
 `detectSample.jobMemory`|Int|64|Memory allocated for this job (GB)
@@ -71,7 +70,7 @@ Parameter|Value|Default|Description
 `detectSample.pullreadsScript`|String|"$MRDETECT_ROOT/bin/pull_reads"|pull_reads.py executable
 `detectSample.qualityscoreScript`|String|"$MRDETECT_ROOT/bin/quality_score"|quality_score.py executable
 `detectSample.filterAndDetectScript`|String|"$MRDETECT_ROOT/bin/filterAndDetect"|filterAndDetect.py executable
-`snvDetectionSummary.pvalue`|String|0.00001|p-value for HBC error rate
+`snvDetectionSummary.pvalue`|String|"0.00001"|p-value for HBC error rate
 `snvDetectionSummary.jobMemory`|Int|20|Memory allocated for this job (GB)
 `snvDetectionSummary.threads`|Int|1|Requested CPU threads
 `snvDetectionSummary.timeout`|Int|2|Hours before task timeout
@@ -83,11 +82,12 @@ Parameter|Value|Default|Description
 
 Output | Type | Description
 ---|---|---
-`snvDetectionResult`|File|Result from SNV detection incl sample HBCs
-`pWGS_svg`|File|pWGS svg
-`snpcount`|File|number of SNPs in vcf after filtering
-`snvDetectionVAF`|File?|VAF from SNV detection for sample
-`final_call`|File|Final file of mrdetect results
+`snvDetectionResult`|File?|{'description': 'Result from SNV detection incl sample HBCs', 'vidarr_label': 'snvDetectionResult'}
+`pWGS_svg`|File?|{'description': 'pWGS svg', 'vidarr_label': 'pWGS_svg'}
+`snpcount`|File|{'description': 'number of SNPs in vcf after filtering', 'vidarr_label': 'snpcount'}
+`snvDetectionVAF`|File?|{'description': 'VAF from SNV detection for sample', 'vidarr_label': 'snvDetectionVAF'}
+`final_call`|File?|{'description': 'Final file of mrdetect results', 'vidarr_label': 'final_call'}
+`filteredvcf`|File?|Filtered vcf
 
 
 ## Commands
@@ -138,12 +138,13 @@ Output | Type | Description
  		
  		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' >~{samplebasename}.HBCs.txt
  
- 		$MRDETECT_ROOT/bin/pwg_test  \
- 			--sampleName ~{outputFileNamePrefix} \
- 			--results ~{outputFileNamePrefix}.HBCs.csv \
- 			--candidateSNVsCountFile ~{snpcount} \
- 			--vafFile ~{vafFile} \
- 			--pval ~{pvalue} 
+ 		~{pwgtestscript} \
+			--sampleName ~{plasmaSampleName} \
+			--results ~{plasmaSampleName}.HBCs.csv \
+			--candidateSNVsCountFile ~{snpcount} \
+			--vafFile ~{vafFile} \
+			--pval ~{pvalue} 
+
  ## Support
 
 For support, please file an issue on the [Github project](https://github.com/oicr-gsi) or send an email to gsi@oicr.on.ca .

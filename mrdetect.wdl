@@ -5,7 +5,6 @@ workflow mrdetect {
 		File? plasmabam
 		File? plasmabai
 		String? plasmaSampleName 
-		String outputFileNamePrefix
 		String tumorSampleName
 		File tumorvcf
 		File tumorvcfindex
@@ -19,9 +18,9 @@ workflow mrdetect {
 		plasmaSampleName: "name for plasma sample (from bam)"
 		tumorvcf: "tumor vcf file, bgzip"
 		tumorvcfindex: "tumor vcf index file"
-		outputFileNamePrefix: "Prefix for output file"
 		tumorSampleName: "ID for WGS tumor sample, must match .vcf header"
 		controlFileList: "tab seperated list of bam and bai files for healthy blood controls"
+                full_analysis_mode: "Enable full analysis mode with this flag"
 	}
 
 	call filterVCF {
@@ -45,7 +44,6 @@ workflow mrdetect {
 				plasmabai = control[1],
 				plasmaSampleName = basename(control[0], ".bam"),
 				tumorvcf = filterVCF.filteredvcf,
-				outputFileNamePrefix = outputFileNamePrefix
 			}
 		}
 
@@ -55,16 +53,15 @@ workflow mrdetect {
 			plasmabai = plasmabai,
 			plasmaSampleName = plasmaSampleName,
 			tumorvcf = filterVCF.filteredvcf,
-			outputFileNamePrefix = outputFileNamePrefix
 		}
 
 		call snvDetectionSummary {
 			input:
 			controlCalls = select_all(detectControl.snvDetectionFinalResult),
 			sampleCalls = detectSample.snvDetectionFinalResult,
-			outputFileNamePrefix = outputFileNamePrefix,
 			snpcount = filterVCF.snpcount,
-			vafFile = detectSample.snvDetectionVAF
+			vafFile = detectSample.snvDetectionVAF,
+			plasmaSampleName = plasmaSampleName
 		}
 	}
 
@@ -72,25 +69,38 @@ workflow mrdetect {
 		author: "Felix Beaudry"
 		email: "fbeaudry@oicr.on.ca"
 		description: "Workflow for MRdetect, detection of Minimal Residual Disease from paired tumor-plasma sample"
-		dependencies:
-		[
+		    dependencies: [
 			{
-				name: "mrdetect/1.0",
-				url: "https://ctl.cornell.edu/technology/mrdetect-license-request/"
+			name: "mrdetect/1.0",
+			url: "https://ctl.cornell.edu/technology/mrdetect-license-request/"
 			},
 			{
-				name: "bcftools/1.9",
-				url: "https://github.com/samtools/bcftools"
-			}
-		]
-		output_meta: {
-			pWGS_svg: "pWGS svg",
-			snvDetectionResult: "Result from SNV detection incl sample HBCs",
-			final_call: "Final file of mrdetect results",
-			snvDetectionVAF: "VAF from SNV detection for sample",
-			snpcount: "number of SNPs in vcf after filtering"
+			name: "bcftools/1.9",
+			url: "https://github.com/samtools/bcftools"
+			}]
+		    output_meta: {
+		    pWGS_svg: {
+			description: "pWGS svg",
+			vidarr_label: "pWGS_svg"
+		    },
+		    snvDetectionResult: {
+			description: "Result from SNV detection incl sample HBCs",
+			vidarr_label: "snvDetectionResult"
+		    },
+		    final_call: {
+			description: "Final file of mrdetect results",
+			vidarr_label: "final_call"
+		    },
+		    snvDetectionVAF: {
+			description: "VAF from SNV detection for sample",
+			vidarr_label: "snvDetectionVAF"
+		    },
+		    snpcount: {
+			description: "number of SNPs in vcf after filtering",
+			vidarr_label: "snpcount"
+		    }
 		}
-	}
+		}
 	output {
 		File? snvDetectionResult = snvDetectionSummary.all_calls
 		File? pWGS_svg = snvDetectionSummary.pWGS_svg
@@ -120,7 +130,7 @@ task filterVCF {
 		tumorvcf: "tumor vcf file, bgzip"
 		tumorvcfindex: "tumor vcf index file"
 		tumorSampleName: "ID for WGS tumor sample"
-		tumorVCFfilter: "set of filter calls to incl. in tumor VCF (any line with these flags will be included"
+		tumorVCFfilter: "set of filter calls to exclude in tumor VCF (any line with these flags will be excluded"
 		tumorVAF: "Variant Allele Frequency for tumor VCF"
 		genome: "Path to loaded genome .fa"
 		difficultRegions: "Path to .bed excluding difficult regions, string must include the flag --regions-file "
@@ -140,7 +150,7 @@ task filterVCF {
 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{tumorSampleName}.SNP.vcf
 
-		awk '$1 !~ "#" {print}' ~{tumorSampleName}.SNP.vcf | wc -l >SNP.count.txt
+		awk '$1 !~ "#" {print}' ~{tumorSampleName}.SNP.vcf | wc -l > ~{tumorSampleName}.SNP.count.txt
 
 	>>>
 
@@ -153,7 +163,7 @@ task filterVCF {
 
 	output {
 		File filteredvcf = "~{tumorSampleName}.SNP.vcf"
-		File snpcount = "SNP.count.txt"
+		File snpcount = "~{tumorSampleName}.SNP.count.txt"
 	}
 
 	meta {
@@ -168,7 +178,6 @@ task detectSNVs {
 	input {
 		File? plasmabam
 		File? plasmabai
-		String outputFileNamePrefix
 		File tumorvcf
 		String? plasmaSampleName 
 		String tumorSampleName = basename(tumorvcf, ".vcf")
@@ -186,7 +195,6 @@ task detectSNVs {
 	parameter_meta {
 		plasmabam: "plasma input .bam file"
 		plasmabai: "plasma input .bai file"
-		outputFileNamePrefix: "Prefix for output file"
 		tumorvcf: "filtered tumor vcf file"
 		plasmaSampleName: "name for plasma sample (from bam)"
 		tumorSampleName: "name for tumour sample (from vcf)"
@@ -290,13 +298,13 @@ task snvDetectionSummary {
 		Array[File] controlCalls
 		File snpcount
 		File? vafFile
-		String outputFileNamePrefix
 		String pvalue = "0.00001"
 		Int jobMemory = 20
 		Int threads = 1
 		Int timeout = 2
 		String modules = "mrdetect/1.1.1"
 		String pwgtestscript = "$MRDETECT_ROOT/bin/pwg_test"
+		String? plasmaSampleName
 	}
 
 	parameter_meta {
@@ -304,13 +312,13 @@ task snvDetectionSummary {
 		controlCalls: "array of file of detection rate calls for HBCs"
 		snpcount: "count of candidate SNPs"
 		vafFile: "vaf from primary plasma"
-		outputFileNamePrefix: "Prefix for output file"
 		pvalue: "p-value for HBC error rate"
 		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
 		timeout: "Hours before task timeout"
 		pwgtestscript: "executable of pwg_test.R"
+		plasmaSampleName: "name for plasma sample (from bam)"
 	}
 
 	command <<<
@@ -318,11 +326,11 @@ task snvDetectionSummary {
 
 		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' > HBCs.csv
 
-		cat ~{sampleCalls} HBCs.csv >~{outputFileNamePrefix}.HBCs.csv
+		cat ~{sampleCalls} HBCs.csv > ~{plasmaSampleName}.HBCs.csv
 
 		~{pwgtestscript} \
-			--sampleName ~{outputFileNamePrefix} \
-			--results ~{outputFileNamePrefix}.HBCs.csv \
+			--sampleName ~{plasmaSampleName} \
+			--results ~{plasmaSampleName}.HBCs.csv \
 			--candidateSNVsCountFile ~{snpcount} \
 			--vafFile ~{vafFile} \
 			--pval ~{pvalue} 
@@ -337,9 +345,9 @@ task snvDetectionSummary {
 	}
 
 	output {
-		File pWGS_svg = "~{outputFileNamePrefix}.pWGS.svg"
-		File all_calls = "~{outputFileNamePrefix}.HBCs.csv"
-		File final_call = "~{outputFileNamePrefix}.mrdetect.txt"
+		File pWGS_svg = "~{plasmaSampleName}.pWGS.svg"
+		File all_calls = "~{plasmaSampleName}.HBCs.csv"
+		File final_call = "~{plasmaSampleName}.mrdetect.txt"
 	}
 
 	meta {
