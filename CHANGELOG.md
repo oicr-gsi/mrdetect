@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 1.1.1 -2024-08-01
+- Fixed output file name issues. [https://jira.oicr.on.ca/browse/GRD-809]
+
 ## 1.0.3 - 2023-01-16
 - moved mrdetect algorithm scripts to bitbucket
 - seperated filterVCF function from detectSNVs
