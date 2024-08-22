@@ -54,7 +54,6 @@
             "mrdetect.detectSample.blocklist": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
             "mrdetect.detectControl.blocklist": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
             "mrdetect.controlFileList": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBC.chr21.bam.list",
-            "mrdetect.outputFileNamePrefix": "TGL49_0143_Ct_T_WG",
             "mrdetect.tumorSampleName": "TGL49_0143_Br_P_T-92",
             "mrdetect.filterVCF.tumorVCFfilter": null,
             "mrdetect.filterVCF.tumorVAF": null,
@@ -93,7 +92,7 @@
             "mrdetect.snvDetectionSummary.modules": null,
             "mrdetect.snvDetectionSummary.pwgtestscript": null
      },
-        "description": "mrdetect workflow test",
+        "description": "TGL49_0143Test",
         "engineArguments": {
           "write_to_cache": false,
           "read_from_cache": false
@@ -153,7 +152,7 @@
             {
                 "metrics_calculate": "@CHECKOUT@/tests/calculate.sh",
                 "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.1/output_metrics/TGL49_0143Test.metrics",
+                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.1.1/outputMetrics/TGL49_0143Test.metrics",
                 "type": "script"
             }  
         ]
@@ -191,7 +190,6 @@
             "mrdetect.detectSample.blocklist": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
             "mrdetect.detectControl.blocklist": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
             "mrdetect.controlFileList": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBC.chr21.bam.list",
-            "mrdetect.outputFileNamePrefix": "TGL49_0143_Ct_T_WG",
             "mrdetect.tumorSampleName": "TGL49_0143_Br_P_T-92",
             "mrdetect.filterVCF.tumorVCFfilter": null,
             "mrdetect.filterVCF.tumorVAF": null,
@@ -230,17 +228,17 @@
             "mrdetect.snvDetectionSummary.modules": null,
             "mrdetect.snvDetectionSummary.pwgtestscript": null
      },
-        "description": "mrdetect filter_only workflow test",
+        "description": "mrdetect_filter_only_test",
         "engineArguments": {
           "write_to_cache": false,
           "read_from_cache": false
         },
-        "id": "filter_only_Test",
+        "id": "mrdetect_filter_only_test",
         "metadata": {
             "mrdetect.filteredvcf": {
                 "contents": [
                     {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_filter_only_Test_@JENKINSID@"
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_mrdetect_filter_only_test_@JENKINSID@"
                     }
                 ],
                 "type": "ALL"
@@ -248,7 +246,7 @@
             "mrdetect.snpcount": {
                 "contents": [
                     {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_filter_only_Test_@JENKINSID@"
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_mrdetect_filter_only_test_@JENKINSID@"
                     }
                 ],
                 "type": "ALL"
@@ -290,7 +288,7 @@
             {
                 "metrics_calculate": "@CHECKOUT@/tests/filter_only_calculate.sh",
                 "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.0.5/output_metrics/filter_only_metrics",
+                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.1.1/outputMetrics/filter_only.metrics",
                 "type": "script"
             }  
         ]

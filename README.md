@@ -22,7 +22,6 @@ java -jar cromwell.jar run mrdetect.wdl --inputs inputs.json
 #### Required workflow parameters:
 Parameter|Value|Description
 ---|---|---
-`outputFileNamePrefix`|String|Prefix for output file
 `tumorSampleName`|String|ID for WGS tumor sample, must match .vcf header
 `tumorvcf`|File|tumor vcf file, bgzip
 `tumorvcfindex`|File|tumor vcf index file
@@ -141,18 +140,16 @@ This command processes the list of control files as paired bam/bai files and pri
  
 Finally, `pwg_test.R` will process the controls and the sample to make a final call. 	
  		
-```
-	cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' >~{samplebasename}.HBCs.txt
+ 		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' >~{samplebasename}.HBCs.txt
+ 
+ 		~{pwgtestscript} \
+			--sampleName ~{plasmaSampleName} \
+			--results ~{plasmaSampleName}.HBCs.csv \
+			--candidateSNVsCountFile ~{snpcount} \
+			--vafFile ~{vafFile} \
+			--pval ~{pvalue} 
 
-	$MRDETECT_ROOT/bin/pwg_test  \
-		--sampleName ~{outputFileNamePrefix} \
-		--results ~{outputFileNamePrefix}.HBCs.csv \
-		--candidateSNVsCountFile ~{snpcount} \
-		--vafFile ~{vafFile} \
-		--pval ~{pvalue}
-```
-
-## Support
+ ## Support
 
 For support, please file an issue on the [Github project](https://github.com/oicr-gsi) or send an email to gsi@oicr.on.ca .
 

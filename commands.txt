@@ -46,9 +46,10 @@ Finally, `pwg_test.R` will process the controls and the sample to make a final c
 		
 		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' >~{samplebasename}.HBCs.txt
 
-		$MRDETECT_ROOT/bin/pwg_test  \
-			--sampleName ~{outputFileNamePrefix} \
-			--results ~{outputFileNamePrefix}.HBCs.csv \
+		~{pwgtestscript} \
+			--sampleName ~{plasmaSampleName} \
+			--results ~{plasmaSampleName}.HBCs.csv \
 			--candidateSNVsCountFile ~{snpcount} \
 			--vafFile ~{vafFile} \
 			--pval ~{pvalue} 
+
