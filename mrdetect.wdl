@@ -9,7 +9,6 @@ workflow mrdetect {
 		File tumorvcf
 		File tumorvcfindex
 		Boolean full_analysis_mode = true
-		String controlFileList = "/.mounts/labs/gsi/src/pwgs_hbc/1.0/HBC.bam.list"
 	}
 
 	parameter_meta {
@@ -19,7 +18,6 @@ workflow mrdetect {
 		tumorvcf: "tumor vcf file, bgzip"
 		tumorvcfindex: "tumor vcf index file"
 		tumorSampleName: "ID for WGS tumor sample, must match .vcf header"
-		controlFileList: "tab seperated list of bam and bai files for healthy blood controls"
                 full_analysis_mode: "Enable full analysis mode with this flag"
 	}
 
@@ -32,10 +30,7 @@ workflow mrdetect {
 
 	if(full_analysis_mode) {
 		
-		call parseControls {
-			input:
-			controlFileList = controlFileList
-		}
+		call parseControls {}
 
 		scatter (control in parseControls.controlFiles) {
 			call detectSNVs as detectControl {
@@ -259,7 +254,8 @@ task parseControls {
 	input {
 		String controlFileList 
 		Int jobMemory = 4
-		Int timeout = 12
+	        Int timeout = 12
+		String modules = "pwgs-hbc/2.0"
 	}
 
 	parameter_meta {
@@ -270,9 +266,9 @@ task parseControls {
 
 	command <<<
 		python <<CODE
-		import os, re
+		import os
 
-		with open("~{controlFileList}") as f:
+		with open(os.environ.get("PWGS_HBC_LIST")) as f:
 			for line in f:
 				line = line.rstrip()
 				tmp = line.split("\t")

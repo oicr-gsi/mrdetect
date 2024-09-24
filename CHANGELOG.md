@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.2.0 - 2024-09-24
+- Update HBC BAM files to version 2.0
+- Get HBC BAM list path from environment module `pwgs-hbc` instead of hard-coded value
+
 ## 1.1.1 -2024-08-01
 - Fixed output file name issues. [https://jira.oicr.on.ca/browse/GRD-809]
 
