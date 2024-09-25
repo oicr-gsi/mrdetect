@@ -252,7 +252,7 @@ task detectSNVs {
 
 task parseControls {
 	input {
-		String controlFileList 
+		String controlFileList = "$PWGS_HBC_LIST"
 		Int jobMemory = 4
 	        Int timeout = 12
 		String modules = "pwgs-hbc/2.0"
@@ -268,7 +268,7 @@ task parseControls {
 		python <<CODE
 		import os
 
-		with open(os.environ.get("PWGS_HBC_LIST")) as f:
+		with open(os.environ.get("~{controlFileList}")) as f:
 			for line in f:
 				line = line.rstrip()
 				tmp = line.split("\t")
@@ -281,7 +281,8 @@ task parseControls {
 	runtime {
 		memory:  "~{jobMemory} GB"
 		timeout: "~{timeout}"
-	}
+		modules: "~{modules}"
+        }
 
 	output {
 		Array[Array[File]] controlFiles = read_tsv(stdout())
