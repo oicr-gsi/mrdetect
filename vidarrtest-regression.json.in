@@ -3,7 +3,7 @@
         "arguments": {
             "mrdetect.tumorvcf": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Br_P_WG.chr21.vcf.gz",
+                    "configuration": "/.mounts/labs/prod/vidarr/output-research/800d/b6af/ce71/800db6afce71235cd0aa08291615325fc35badc1b5fdd288af10114ee52a6311/CHARMQ_0676_nn_P_WG.mutect2.filtered.vcf.gz",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -15,7 +15,7 @@
             },
             "mrdetect.tumorvcfindex": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Br_P_WG.chr21.vcf.gz.tbi",
+                    "configuration": "/.mounts/labs/prod/vidarr/output-research/800d/b6af/ce71/800db6afce71235cd0aa08291615325fc35badc1b5fdd288af10114ee52a6311/CHARMQ_0676_nn_P_WG.mutect2.filtered.vcf.gz.tbi",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -27,7 +27,7 @@
             },
             "mrdetect.plasmabam": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Ct_T_WG.chr21.bam",
+                    "configuration": "/.mounts/labs/prod/vidarr/output-research/756d/394f/2cb4/756d394f2cb4f9ae6d6db169bfacbbbf71c1e2cd6f7767e1e348612bdceb9e3f/CHARMQ_0676_Pl_T_PG_T-676.filter.deduped.recalibrated.bam",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -39,7 +39,7 @@
             },
             "mrdetect.plasmabai": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/TGL49_0143_Ct_T_WG.chr21.bam.bai",
+                    "configuration": "/.mounts/labs/prod/vidarr/output-research/756d/394f/2cb4/756d394f2cb4f9ae6d6db169bfacbbbf71c1e2cd6f7767e1e348612bdceb9e3f/CHARMQ_0676_Pl_T_PG_T-676.filter.deduped.recalibrated.bai",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -49,12 +49,12 @@
                 },
                 "type": "EXTERNAL"
             },
-            "mrdetect.plasmaSampleName": "TGL49_0143_Ct_T_WG.chr21",
+            "mrdetect.plasmaSampleName": "CHARMQ_0676_Pl_T_PG_T-676",
             "mrdetect.full_analysis_mode": true,
-            "mrdetect.detectSample.blocklist": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
-            "mrdetect.detectControl.blocklist": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBCs.blacklist.chr21.vcf.gz",
-            "mrdetect.controlFileList": "/.mounts/labs/gsi/testdata/mrdetect/1.0/input_data/HBC.chr21.bam.list",
-            "mrdetect.tumorSampleName": "TGL49_0143_Br_P_T-92",
+            "mrdetect.detectSample.blocklist": null,
+            "mrdetect.detectControl.blocklist": null,
+            "mrdetect.controlFileList": null,
+            "mrdetect.tumorSampleName": "CHARMQ_0199_nn_P_T-199",
             "mrdetect.reference": "hg38",
             "mrdetect.instrument": "Illumina NovaSeq 6000",
             "mrdetect.filterVCF.tumorVCFfilter": null,
@@ -87,24 +87,24 @@
             "mrdetect.detectSample.pullreadsScript": null,
             "mrdetect.detectSample.qualityscoreScript": null,
             "mrdetect.detectSample.filterAndDetectScript": null,
-            "mrdetect.snvDetectionSummary.pvalue": "0.01",
+            "mrdetect.snvDetectionSummary.pvalue": "0.0000329",
             "mrdetect.snvDetectionSummary.jobMemory": null,
             "mrdetect.snvDetectionSummary.threads": null,
             "mrdetect.snvDetectionSummary.timeout": null,
             "mrdetect.snvDetectionSummary.modules": null,
             "mrdetect.snvDetectionSummary.pwgtestscript": null
      },
-        "description": "TGL49_0143Test",
+        "description": "CHARMQ_0676Test",
         "engineArguments": {
           "write_to_cache": false,
           "read_from_cache": false
         },
-        "id": "TGL49_0143Test",
+        "id": "CHARMQ_0676Test",
         "metadata": {
             "mrdetect.final_call": {
                 "contents": [
                     {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_CHARMQ_0676_@JENKINSID@"
                     }
                 ],
                 "type": "ALL"
@@ -112,7 +112,7 @@
             "mrdetect.snvDetectionVAF": {
                 "contents": [
                     {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_CHARMQ_0676_@JENKINSID@"
                     }
                 ],
                 "type": "ALL"
@@ -120,7 +120,7 @@
             "mrdetect.snpcount": {
                 "contents": [
                     {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_CHARMQ_0676_@JENKINSID@"
                     }
                 ],
                 "type": "ALL"
@@ -128,7 +128,7 @@
             "mrdetect.snvDetectionResult": {
                 "contents": [
                     {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_CHARMQ_0676Test_@JENKINSID@"
                     }
                 ],
                 "type": "ALL"
@@ -136,7 +136,7 @@
             "mrdetect.pWGS_svg": {
                 "contents": [
                     {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetectCHARMQ_0676Test_@JENKINSID@"
                     }
                 ],
                 "type": "ALL"
@@ -144,7 +144,7 @@
             "mrdetect.filteredvcf": {
                 "contents": [
                     {
-                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_TGL49_0143Test_@JENKINSID@"
+                        "outputDirectory": "@SCRATCH@/@DATE@_Workflow_mrdetect_CHARMQ_0676Test_@JENKINSID@"
                     }
                 ],
                 "type": "ALL"
@@ -154,7 +154,7 @@
             {
                 "metrics_calculate": "@CHECKOUT@/tests/calculate.sh",
                 "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.1.1/outputMetrics/TGL49_0143Test.metrics",
+                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.1.1/outputMetrics/CHARMQ_0676_test.metrics",
                 "type": "script"
             }  
         ]
