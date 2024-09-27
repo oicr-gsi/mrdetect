@@ -32,7 +32,7 @@ workflow mrdetect {
 		tumorvcf: "tumor vcf file, bgzip"
 		tumorvcfindex: "tumor vcf index file"
 		tumorSampleName: "ID for WGS tumor sample, must match .vcf header"
-		reference: "he genome reference build. Only hg38 supported"
+		reference: "genome reference build. Only hg38 supported"
 		instrument: "sequencing instrument used (Illumina NovaSeq X Plus or Illumina NovaSeq 6000)"
         full_analysis_mode: "Enable full analysis mode with this flag"
 	}
@@ -60,7 +60,6 @@ workflow mrdetect {
 
 	call filterVCF {
 		input:
-		#modules = resources [ reference ].filterVCF_modules
 		modules = resources[reference].filterVCF_modules,
 		genome = resources[reference].ref_fasta,
 		difficultRegions = resources[reference].filterVCF_difficultRegions,
