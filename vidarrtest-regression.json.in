@@ -54,7 +54,7 @@
             "mrdetect.detectSample.blocklist": null,
             "mrdetect.detectControl.blocklist": null,
             "mrdetect.controlFileList": null,
-            "mrdetect.tumorSampleName": "CHARMQ_0199_nn_P_T-199",
+            "mrdetect.tumorSampleName": "CHARMQ_0676_nn_P",
             "mrdetect.reference": "hg38",
             "mrdetect.instrument": "Illumina NovaSeq 6000",
             "mrdetect.filterVCF.tumorVCFfilter": null,
