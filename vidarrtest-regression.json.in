@@ -3,7 +3,7 @@
         "arguments": {
             "mrdetect.tumorvcf": {
                 "contents": {
-                    "configuration": "/.mounts/labs/prod/vidarr/output-research/800d/b6af/ce71/800db6afce71235cd0aa08291615325fc35badc1b5fdd288af10114ee52a6311/CHARMQ_0676_nn_P_WG.mutect2.filtered.vcf.gz",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.2.0/input_data/CHARMQ_0676_nn_P_WG.mutect2.filtered.vcf.gz",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -15,7 +15,7 @@
             },
             "mrdetect.tumorvcfindex": {
                 "contents": {
-                    "configuration": "/.mounts/labs/prod/vidarr/output-research/800d/b6af/ce71/800db6afce71235cd0aa08291615325fc35badc1b5fdd288af10114ee52a6311/CHARMQ_0676_nn_P_WG.mutect2.filtered.vcf.gz.tbi",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.2.0/input_data/CHARMQ_0676_nn_P_WG.mutect2.filtered.vcf.gz.tbi",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -27,7 +27,7 @@
             },
             "mrdetect.plasmabam": {
                 "contents": {
-                    "configuration": "/.mounts/labs/prod/vidarr/output-research/756d/394f/2cb4/756d394f2cb4f9ae6d6db169bfacbbbf71c1e2cd6f7767e1e348612bdceb9e3f/CHARMQ_0676_Pl_T_PG_T-676.filter.deduped.recalibrated.bam",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.2.0/input_data/CHARMQ_0676_Pl_T_PG_T-676.filter.deduped.recalibrated.bam",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -39,7 +39,7 @@
             },
             "mrdetect.plasmabai": {
                 "contents": {
-                    "configuration": "/.mounts/labs/prod/vidarr/output-research/756d/394f/2cb4/756d394f2cb4f9ae6d6db169bfacbbbf71c1e2cd6f7767e1e348612bdceb9e3f/CHARMQ_0676_Pl_T_PG_T-676.filter.deduped.recalibrated.bai",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.2.0/input_data/CHARMQ_0676_Pl_T_PG_T-676.filter.deduped.recalibrated.bai",
                     "externalIds": [
                         {
                             "id": "TEST",
