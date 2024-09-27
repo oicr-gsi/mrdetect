@@ -1,5 +1,17 @@
 version 1.0
 
+struct genomeResources {
+    String ref_fasta
+    String filterVCF_modules
+    String filterVCF_difficultRegions
+	String detectSNVs_modules
+}
+
+struct controlResources {
+    String parseControls_modules
+    String parseControls_controlFileList
+}
+
 workflow mrdetect {
 	input {
 		File? plasmabam
@@ -8,6 +20,8 @@ workflow mrdetect {
 		String tumorSampleName
 		File tumorvcf
 		File tumorvcfindex
+		String reference
+		String instrument
 		Boolean full_analysis_mode = true
 	}
 
@@ -18,11 +32,37 @@ workflow mrdetect {
 		tumorvcf: "tumor vcf file, bgzip"
 		tumorvcfindex: "tumor vcf index file"
 		tumorSampleName: "ID for WGS tumor sample, must match .vcf header"
-                full_analysis_mode: "Enable full analysis mode with this flag"
+		instrument: "sequencing instrument used (Illumina NovaSeq X Plus or Illumina NovaSeq 6000)"
+        full_analysis_mode: "Enable full analysis mode with this flag"
+	}
+
+	Map[String,genomeResources] resources = {
+	"hg38": {
+		"ref_fasta": "$HG38_ROOT/hg38_random.fa",
+		"filterVCF_modules": "bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0",
+		"filterVCF_difficultRegions": "$HG38_DAC_EXCLUSION_ROOT/hg38-dac-exclusion.v2.bed",
+		"detectSNVs_modules" : "mrdetect/1.1.1 pwgs-blocklist/hg38.1"
+		}
+	}
+
+	Map[String,controlResources] controls = {
+	"Illumina NovaSeq X Plus": {
+		"parseControls_modules": "pwgs-hbc/2.0",
+		"parseControls_controlFileList" : "PWGS_HBC_LIST"
+		},
+	"Illumina NovaSeq 6000": {
+		"parseControls_modules": "pwgs-hbc/1.0",
+		"parseControls_controlFileList" : "PWGS_HBC_LIST"
+		}
+
 	}
 
 	call filterVCF {
 		input:
+		#modules = resources [ reference ].filterVCF_modules
+		modules = resources[reference].filterVCF_modules,
+		genome = resources[reference].ref_fasta,
+		difficultRegions = resources[reference].filterVCF_difficultRegions,
 		tumorvcf = tumorvcf,
 		tumorvcfindex = tumorvcfindex,
 		tumorSampleName = tumorSampleName
@@ -30,7 +70,11 @@ workflow mrdetect {
 
 	if(full_analysis_mode) {
 		
-		call parseControls {}
+		call parseControls {
+			input:
+			modules = controls[instrument].parseControls_modules,
+			controlFileList = controls[instrument].parseControls_controlFileList
+		}
 
 		scatter (control in parseControls.controlFiles) {
 			call detectSNVs as detectControl {
@@ -39,6 +83,7 @@ workflow mrdetect {
 				plasmabai = control[1],
 				plasmaSampleName = basename(control[0], ".bam"),
 				tumorvcf = filterVCF.filteredvcf,
+				modules = resources[reference].detectSNVs_modules
 			}
 		}
 
@@ -48,6 +93,7 @@ workflow mrdetect {
 			plasmabai = plasmabai,
 			plasmaSampleName = plasmaSampleName,
 			tumorvcf = filterVCF.filteredvcf,
+			modules = resources[reference].detectSNVs_modules
 		}
 
 		call snvDetectionSummary {
@@ -113,9 +159,9 @@ task filterVCF {
 		String tumorSampleName
 		String tumorVCFfilter = "FILTER~'haplotype' | FILTER~'clustered_events' | FILTER~'slippage' | FILTER~'weak_evidence' | FILTER~'strand_bias' | FILTER~'position' | FILTER~'normal_artifact' | FILTER~'multiallelic' | FILTER~'map_qual' | FILTER~'germline' | FILTER~'fragment' | FILTER~'contamination' | FILTER~'base_qual'"
 		String tumorVAF = "0.1"
-		String genome = "$HG38_ROOT/hg38_random.fa"
-		String difficultRegions = "--regions-file $HG38_DAC_EXCLUSION_ROOT/hg38-dac-exclusion.v2.bed"
-		String modules = "bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0"
+		String genome 
+		String difficultRegions
+		String modules
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
@@ -139,7 +185,7 @@ task filterVCF {
 	command <<<
 		set -euo pipefail
 
-		$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorSampleName} ~{difficultRegions} ~{tumorvcf} |\
+		$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorSampleName} --regions-file ~{difficultRegions} ~{tumorvcf} |\
 		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome} |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
@@ -176,7 +222,7 @@ task detectSNVs {
 		File tumorvcf
 		String? plasmaSampleName 
 		String tumorSampleName = basename(tumorvcf, ".vcf")
-		String modules = "mrdetect/1.1.1 pwgs-blocklist/hg38.1"
+		String modules
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 20
@@ -252,10 +298,10 @@ task detectSNVs {
 
 task parseControls {
 	input {
-		String controlFileList = "$PWGS_HBC_LIST"
+		String controlFileList
 		Int jobMemory = 4
-	        Int timeout = 12
-		String modules = "pwgs-hbc/2.0"
+	    Int timeout = 12
+		String modules
 	}
 
 	parameter_meta {
