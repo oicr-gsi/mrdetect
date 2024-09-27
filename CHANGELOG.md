@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 1.2.0 - 2024-09-24
 ### Added
-- Resource specific files now 
+- Resource specific files now exposed in map and required inputs reference and instrument model determine resources to be used
 - Get HBC BAM list path from environment module `pwgs-hbc` instead of hard-coded value
 ### Changed
 - Update HBC BAM files to version 2.0
