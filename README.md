@@ -77,13 +77,13 @@ Parameter|Value|Default|Description
 ### Outputs
 
 Output | Type | Description
----|---|---
-`snvDetectionResult`|File?|{'description': 'Result from SNV detection incl sample HBCs', 'vidarr_label': 'snvDetectionResult'}
-`pWGS_svg`|File?|{'description': 'pWGS svg', 'vidarr_label': 'pWGS_svg'}
-`snpcount`|File|{'description': 'number of SNPs in vcf after filtering', 'vidarr_label': 'snpcount'}
-`snvDetectionVAF`|File?|{'description': 'VAF from SNV detection for sample', 'vidarr_label': 'snvDetectionVAF'}
-`final_call`|File?|{'description': 'Final file of mrdetect results', 'vidarr_label': 'final_call'}
-`filteredvcf`|File?|Filtered vcf
+---|---|---|---
+`snvDetectionResult`|File?|Result from SNV detection incl sample HBCs|vidarr_label: snvDetectionResult
+`pWGS_svg`|File?|pWGS svg|vidarr_label: pWGS_svg
+`snpcount`|File|number of SNPs in vcf after filtering|vidarr_label: snpcount
+`snvDetectionVAF`|File?|VAF from SNV detection for sample|vidarr_label: snvDetectionVAF
+`final_call`|File?|Final file of mrdetect results|vidarr_label: final_call
+`filteredvcf`|File?|Filtered vcf|
 
 
 ## Commands
@@ -91,7 +91,7 @@ Output | Type | Description
  
  ### filterVCF
  Performs vcf Filtering, followed by processing of individual `MRDetect` calls. Filters include removing difficult regions (optional), splitting multiallelic loci into one allele per line, removing indels, removing loci by quality metrics (set by `tumorVCFfilter`) and finally removing SNPs by VAF (set by `tumorVAF`).
- <<<
+```
  		set -euo pipefail
  
  		$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorSampleName} --regions-file ~{difficultRegions} ~{tumorvcf} |\
@@ -102,7 +102,7 @@ Output | Type | Description
  
  		awk '$1 !~ "#" {print}' ~{tumorSampleName}.SNP.vcf | wc -l > ~{tumorSampleName}.SNP.count.txt
  
- 	>>>
+```
  
  ### parseControls
  This command processes the list of control files as paired bam/bai files and prints them out for detection.
@@ -116,7 +116,7 @@ Output | Type | Description
  
  3- `filterAndDetect` keeps reads with high plasma likehood and removed those for which SNPs are in the blocklist. 
  
- <<<
+```
  		set -euo pipefail
  
  		~{pullreadsScript} \
@@ -137,11 +137,11 @@ Output | Type | Description
  			--blocklist ~{blocklist} \
  			--troubleshoot
  
- 	>>>
+```
  
  ### parseControls
  
- <<<
+```
  		python <<CODE
  		import os
  
@@ -153,12 +153,12 @@ Output | Type | Description
  				print(r)
  		f.close()
  		CODE
- 	>>>
+```
  
  ### snvDetectionSummary
  
  Finally, `pwg_test.R` will process the controls and the sample to make a final call. 	
- <<<
+```
  		set -euo pipefail
  
  		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' > HBCs.csv
@@ -172,7 +172,7 @@ Output | Type | Description
  			--vafFile ~{vafFile} \
  			--pval ~{pvalue} 
  
- 	>>>
+```
  ## Support
 
 For support, please file an issue on the [Github project](https://github.com/oicr-gsi) or send an email to gsi@oicr.on.ca .
