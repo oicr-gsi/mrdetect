@@ -76,7 +76,7 @@ Parameter|Value|Default|Description
 
 ### Outputs
 
-Output | Type | Description
+Output | Type | Description | Labels
 ---|---|---|---
 `snvDetectionResult`|File?|Result from SNV detection incl sample HBCs|vidarr_label: snvDetectionResult
 `pWGS_svg`|File?|pWGS svg|vidarr_label: pWGS_svg
