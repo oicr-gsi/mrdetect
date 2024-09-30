@@ -3,12 +3,18 @@ This section lists commands run by the MRDetect workflow.
 
 ### filterVCF
 Performs vcf Filtering, followed by processing of individual `MRDetect` calls. Filters include removing difficult regions (optional), splitting multiallelic loci into one allele per line, removing indels, removing loci by quality metrics (set by `tumorVCFfilter`) and finally removing SNPs by VAF (set by `tumorVAF`).
+<<<
+		set -euo pipefail
 
-		$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorbasename} ~{difficultRegions} ~{tumorvcf} |\
-		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome}  |\
+		$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorSampleName} --regions-file ~{difficultRegions} ~{tumorvcf} |\
+		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome} |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
-		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" >~{tumorbasename}.SNP.vcf
+		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{tumorSampleName}.SNP.vcf
+
+		awk '$1 !~ "#" {print}' ~{tumorSampleName}.SNP.vcf | wc -l > ~{tumorSampleName}.SNP.count.txt
+
+	>>>
 
 ### parseControls
 This command processes the list of control files as paired bam/bai files and prints them out for detection.
@@ -22,29 +28,54 @@ This command processes the list of control files as paired bam/bai files and pri
 
 3- `filterAndDetect` keeps reads with high plasma likehood and removed those for which SNPs are in the blocklist. 
 
-		$MRDETECT_ROOT/bin/pull_reads \
+<<<
+		set -euo pipefail
+
+		~{pullreadsScript} \
 			--bam ~{plasmabam} \
 			--vcf ~{tumorvcf} \
 			--out PLASMA_VS_TUMOR.tsv
 
-		$MRDETECT_ROOT/bin/quality_score \
+		~{qualityscoreScript} \
 			--pickle-name ~{pickle} \
 			--detections PLASMA_VS_TUMOR.tsv \
 			--output_file PLASMA_VS_TUMOR.svm.tsv
 
-		$MRDETECT_ROOT/bin/filterAndDetect \
+		~{filterAndDetectScript} \
 			--vcfid ~{tumorSampleName} --bamid ~{plasmaSampleName} \
 			--svm PLASMA_VS_TUMOR.svm.tsv \
 			--vcf ~{tumorvcf} \
 			--output ./ \
 			--blocklist ~{blocklist} \
 			--troubleshoot
-		
+
+	>>>
+
+### parseControls
+
+<<<
+		python <<CODE
+		import os
+
+		with open(os.environ.get("~{controlFileList}")) as f:
+			for line in f:
+				line = line.rstrip()
+				tmp = line.split("\t")
+				r = tmp[0] + "\t" + tmp[1]
+				print(r)
+		f.close()
+		CODE
+	>>>
+
 ### snvDetectionSummary
 
 Finally, `pwg_test.R` will process the controls and the sample to make a final call. 	
-		
-		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' >~{samplebasename}.HBCs.txt
+<<<
+		set -euo pipefail
+
+		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' > HBCs.csv
+
+		cat ~{sampleCalls} HBCs.csv > ~{plasmaSampleName}.HBCs.csv
 
 		~{pwgtestscript} \
 			--sampleName ~{plasmaSampleName} \
@@ -53,3 +84,4 @@ Finally, `pwg_test.R` will process the controls and the sample to make a final c
 			--vafFile ~{vafFile} \
 			--pval ~{pvalue} 
 
+	>>>
