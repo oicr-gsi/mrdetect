@@ -269,9 +269,8 @@ task detectSNVs {
 			--svm PLASMA_VS_TUMOR.svm.tsv \
 			--vcf ~{tumorvcf} \
 			--output ./ \
-			--blocklist ~{blocklist} \
-			--troubleshoot
-
+			--blocklist ~{blocklist} 
+		
 	>>>
 
 	runtime {
