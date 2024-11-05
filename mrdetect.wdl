@@ -42,7 +42,7 @@ workflow mrdetect {
 		"ref_fasta": "$HG38_ROOT/hg38_random.fa",
 		"filterVCF_modules": "bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0",
 		"filterVCF_difficultRegions": "$HG38_DAC_EXCLUSION_ROOT/hg38-dac-exclusion.v2.bed",
-		"detectSNVs_modules" : "mrdetect/1.1.1 pwgs-blocklist/hg38.1"
+		"detectSNVs_modules" : "mrdetect/2.0.0 pwgs-blocklist/hg38.1"
 		}
 	}
 
