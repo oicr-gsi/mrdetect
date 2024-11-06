@@ -3,7 +3,7 @@
         "arguments": {
             "mrdetect.tumorvcf": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.2.0/input_data/CHARMQ_0676_nn_P_WG.mutect2.filtered.vcf.gz",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/2.0.0/input_data/CHARMQ_0676_nn_P_WG.mutect2.filtered.vcf.gz",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -15,7 +15,7 @@
             },
             "mrdetect.tumorvcfindex": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.2.0/input_data/CHARMQ_0676_nn_P_WG.mutect2.filtered.vcf.gz.tbi",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/2.0.0/input_data/CHARMQ_0676_nn_P_WG.mutect2.filtered.vcf.gz.tbi",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -27,7 +27,7 @@
             },
             "mrdetect.plasmabam": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.2.0/input_data/CHARMQ_0676_Pl_T_PG_T-676.filter.deduped.recalibrated.bam",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/2.0.0/input_data/CHARMQ_0676_Pl_T_PG_T-676.filter.deduped.recalibrated.bam",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -39,7 +39,7 @@
             },
             "mrdetect.plasmabai": {
                 "contents": {
-                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/1.2.0/input_data/CHARMQ_0676_Pl_T_PG_T-676.filter.deduped.recalibrated.bai",
+                    "configuration": "/.mounts/labs/gsi/testdata/mrdetect/2.0.0/input_data/CHARMQ_0676_Pl_T_PG_T-676.filter.deduped.recalibrated.bai",
                     "externalIds": [
                         {
                             "id": "TEST",
@@ -162,7 +162,7 @@
             {
                 "metrics_calculate": "@CHECKOUT@/tests/calculate.sh",
                 "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.2.0/outputMetrics/CHARMQ_0676_test.metrics",
+                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/2.0.0/outputMetrics/CHARMQ_0676_test.metrics",
                 "type": "script"
             }  
         ]
@@ -308,7 +308,7 @@
             {
                 "metrics_calculate": "@CHECKOUT@/tests/filter_only_calculate.sh",
                 "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/1.1.1/outputMetrics/filter_only.metrics",
+                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/2.0.0/outputMetrics/filter_only.metrics",
                 "type": "script"
             }  
         ]
