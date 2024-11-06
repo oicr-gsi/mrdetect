@@ -333,7 +333,7 @@ task calculateQualityScore {
 
 	meta {
 		output_meta: {
-			snvDetectionReadsScored: "Reads with potential for tumor, with their scores",
+			snvDetectionReadsScored: "Reads with potential for tumor, with their scores"
 		}
 	}
 }
