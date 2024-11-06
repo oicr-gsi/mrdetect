@@ -90,7 +90,7 @@ workflow mrdetect {
 				snvDetectionReads = controlPullReads.snvDetectionReads,
 				modules = resources[reference].detectSNVs_modules
 			}
-			call detectSNVs as detectControlSNVs {
+			call detectSNVs as controlDetectSNVs {
 				input:
 				plasmaSampleName = basename(control[0], ".bam"),
 				tumorvcf = filterVCF.filteredvcf,
@@ -111,7 +111,7 @@ workflow mrdetect {
 			snvDetectionReads = samplePullReads.snvDetectionReads,
 			modules = resources[reference].detectSNVs_modules
 		}
-		call detectSNVs as detectSampleSNVs {
+		call detectSNVs as sampleDetectSNVs {
 			input:
 			plasmaSampleName = plasmaSampleName,
 			tumorvcf = filterVCF.filteredvcf,
@@ -121,10 +121,10 @@ workflow mrdetect {
 
 		call snvDetectionSummary {
 			input:
-			controlCalls = select_all(detectControlSNVs.snvDetectionFinalResult),
-			sampleCalls = detectSampleSNVs.snvDetectionFinalResult,
+			controlCalls = select_all(controlDetectSNVs.snvDetectionFinalResult),
+			sampleCalls = sampleDetectSNVs.snvDetectionFinalResult,
 			snpcount = filterVCF.snpcount,
-			vafFile = detectSampleSNVs.snvDetectionVAF,
+			vafFile = sampleDetectSNVs.snvDetectionVAF,
 			plasmaSampleName = plasmaSampleName
 		}
 	}
@@ -169,7 +169,7 @@ workflow mrdetect {
 		File? snvDetectionResult = snvDetectionSummary.all_calls
 		File? pWGS_svg = snvDetectionSummary.pWGS_svg
 		File snpcount = filterVCF.snpcount
-		File? snvDetectionVAF = detectSampleSNVs.snvDetectionVAF
+		File? snvDetectionVAF = sampleDetectSNVs.snvDetectionVAF
 		File? final_call = snvDetectionSummary.final_call
 		File? filteredvcf = filterVCF.filteredvcf
 	}
