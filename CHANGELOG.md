@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.0.0 - 2024-09-24
+### Changed
+- Update mrdetect module to version 2.0.0 
+- Split detectSNVs task into three components
+
 ## 1.2.0 - 2024-09-24
 ### Added
 - Resource specific files now exposed in map and required inputs reference and instrument model determine resources to be used
