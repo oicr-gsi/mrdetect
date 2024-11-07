@@ -3,6 +3,7 @@ This section lists commands run by the MRDetect workflow.
 
 ### filterVCF
 Performs vcf Filtering, followed by processing of individual `MRDetect` calls. Filters include removing difficult regions (optional), splitting multiallelic loci into one allele per line, removing indels, removing loci by quality metrics (set by `tumorVCFfilter`) and finally removing SNPs by VAF (set by `tumorVAF`).
+
 <<<
 		set -euo pipefail
 
@@ -16,17 +17,11 @@ Performs vcf Filtering, followed by processing of individual `MRDetect` calls. F
 
 	>>>
 
-### parseControls
-This command processes the list of control files as paired bam/bai files and prints them out for detection.
 
-### detectSNVs
-`MRDetect` proceed across three steps. This task is run through for the sample and for all the controls.
+`MRDetect` proceed across three steps. These tasks are run through for the sample and for all the controls.
 
+### pullReads
 1- `pull_reads` takes any reads in the plasma .bam that corresponds to a SNP in the solid-tumour .vcf. 
-
-2- `quality_score` assesses the likelihood that any read is plasma based on the quality score and the trained pickle. 
-
-3- `filterAndDetect` keeps reads with high plasma likehood and removed those for which SNPs are in the blocklist. 
 
 <<<
 		set -euo pipefail
@@ -36,22 +31,37 @@ This command processes the list of control files as paired bam/bai files and pri
 			--vcf ~{tumorvcf} \
 			--out PLASMA_VS_TUMOR.tsv
 
+	>>>
+
+### calculateQualityScore
+2- `quality_score` assesses the likelihood that any read is plasma based on the quality score and the trained pickle. 
+
+<<<
+		set -euo pipefail
+
 		~{qualityscoreScript} \
 			--pickle-name ~{pickle} \
-			--detections PLASMA_VS_TUMOR.tsv \
+			--detections ~{snvDetectionReads} \
 			--output_file PLASMA_VS_TUMOR.svm.tsv
-
-		~{filterAndDetectScript} \
-			--vcfid ~{tumorSampleName} --bamid ~{plasmaSampleName} \
-			--svm PLASMA_VS_TUMOR.svm.tsv \
-			--vcf ~{tumorvcf} \
-			--output ./ \
-			--blocklist ~{blocklist} \
-			--troubleshoot
 
 	>>>
 
+### detectSNVs
+3- `filterAndDetect` keeps reads with high plasma likehood and removed those for which SNPs are in the blocklist. 
+
+<<<
+		set -euo pipefail
+
+		~{filterAndDetectScript} \
+			--vcfid ~{tumorSampleName} --bamid ~{plasmaSampleName} \
+			--svm ~{snvDetectionReadsScored} \
+			--vcf ~{tumorvcf} \
+			--output ./ \
+			--blocklist ~{blocklist} \
+	>>>
+
 ### parseControls
+This command processes the list of control files as paired bam/bai files and prints them out for detection.
 
 <<<
 		python <<CODE
@@ -69,7 +79,8 @@ This command processes the list of control files as paired bam/bai files and pri
 
 ### snvDetectionSummary
 
-Finally, `pwg_test.R` will process the controls and the sample to make a final call. 	
+Finally, `pwg_test.R` will process the controls and the sample to make a final call. 
+
 <<<
 		set -euo pipefail
 

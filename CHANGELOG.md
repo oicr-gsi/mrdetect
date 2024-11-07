@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 2.0.0 - 2024-09-24
+## 1.3.0 - 2024-09-24
 ### Changed
 - Update mrdetect module to version 2.0.0 
 - Split detectSNVs task into three components
@@ -32,10 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Separated filterVCF function from detectSNVs
 - Changed filterAndDetect command to match code updates (v1.1.1)
 
-## 0.2 - 2022-11-21
+## 1.0.2 - 2022-11-21
 ### Added
 - Workflow finalized for production
 
-## 0.0 - 2022-10-14
+## 1.0.0 - 2022-10-14
 ### Added
 - A brand-new workflow.
