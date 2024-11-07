@@ -42,7 +42,7 @@ workflow mrdetect {
 		"ref_fasta": "$HG38_ROOT/hg38_random.fa",
 		"filterVCF_modules": "bcftools/1.9 hg38/p12 hg38-dac-exclusion/1.0",
 		"filterVCF_difficultRegions": "$HG38_DAC_EXCLUSION_ROOT/hg38-dac-exclusion.v2.bed",
-		"detectSNVs_modules" : "mrdetect/1.1.1 pwgs-blocklist/hg38.1"
+		"detectSNVs_modules" : "mrdetect/2.0.0 pwgs-blocklist/hg38.1"
 		}
 	}
 
@@ -76,32 +76,55 @@ workflow mrdetect {
 			controlFileList = controls[instrument].parseControls_controlFileList
 		}
 
+
 		scatter (control in parseControls.controlFiles) {
-			call detectSNVs as detectControl {
+			call pullReads as controlPullReads {
 				input:
 				plasmabam = control[0],
 				plasmabai = control[1],
+				tumorvcf = filterVCF.filteredvcf,
+				modules = resources[reference].detectSNVs_modules
+			}
+			call calculateQualityScore as controlQualityScore {
+				input:
+				snvDetectionReads = controlPullReads.snvDetectionReads,
+				modules = resources[reference].detectSNVs_modules
+			}
+			call detectSNVs as controlDetectSNVs {
+				input:
 				plasmaSampleName = basename(control[0], ".bam"),
 				tumorvcf = filterVCF.filteredvcf,
+				snvDetectionReadsScored = controlQualityScore.snvDetectionReadsScored,
 				modules = resources[reference].detectSNVs_modules
 			}
 		}
 
-		call detectSNVs as detectSample {
+		call pullReads as samplePullReads {
 			input:
 			plasmabam = plasmabam,
 			plasmabai = plasmabai,
+			tumorvcf = filterVCF.filteredvcf,
+			modules = resources[reference].detectSNVs_modules
+		}
+		call calculateQualityScore as sampleQualityScore {
+			input:
+			snvDetectionReads = samplePullReads.snvDetectionReads,
+			modules = resources[reference].detectSNVs_modules
+		}
+		call detectSNVs as sampleDetectSNVs {
+			input:
 			plasmaSampleName = plasmaSampleName,
 			tumorvcf = filterVCF.filteredvcf,
+			snvDetectionReadsScored = sampleQualityScore.snvDetectionReadsScored,
 			modules = resources[reference].detectSNVs_modules
 		}
 
 		call snvDetectionSummary {
 			input:
-			controlCalls = select_all(detectControl.snvDetectionFinalResult),
-			sampleCalls = detectSample.snvDetectionFinalResult,
+			controlCalls = select_all(controlDetectSNVs.snvDetectionFinalResult),
+			sampleCalls = sampleDetectSNVs.snvDetectionFinalResult,
 			snpcount = filterVCF.snpcount,
-			vafFile = detectSample.snvDetectionVAF,
+			vafFile = sampleDetectSNVs.snvDetectionVAF,
 			plasmaSampleName = plasmaSampleName
 		}
 	}
@@ -146,7 +169,7 @@ workflow mrdetect {
 		File? snvDetectionResult = snvDetectionSummary.all_calls
 		File? pWGS_svg = snvDetectionSummary.pWGS_svg
 		File snpcount = filterVCF.snpcount
-		File? snvDetectionVAF = detectSample.snvDetectionVAF
+		File? snvDetectionVAF = sampleDetectSNVs.snvDetectionVAF
 		File? final_call = snvDetectionSummary.final_call
 		File? filteredvcf = filterVCF.filteredvcf
 	}
@@ -215,40 +238,27 @@ task filterVCF {
 	}
 }
 
-task detectSNVs {
+task pullReads {
 	input {
 		File? plasmabam
 		File? plasmabai
 		File tumorvcf
-		String? plasmaSampleName 
-		String tumorSampleName = basename(tumorvcf, ".vcf")
 		String modules
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 20
-		String pickle = "$MRDETECT_ROOT/bin/MRDetectSNV/trained_SVM.pkl"
-		String blocklist = "$PWGS_BLOCKLIST_ROOT/blocklist.vcf.gz"
 		String pullreadsScript = "$MRDETECT_ROOT/bin/pull_reads"
-		String qualityscoreScript = "$MRDETECT_ROOT/bin/quality_score"
-		String filterAndDetectScript = "$MRDETECT_ROOT/bin/filterAndDetect"
 	}
 
 	parameter_meta {
 		plasmabam: "plasma input .bam file"
 		plasmabai: "plasma input .bai file"
 		tumorvcf: "filtered tumor vcf file"
-		plasmaSampleName: "name for plasma sample (from bam)"
-		tumorSampleName: "name for tumour sample (from vcf)"
 		modules: "Required environment modules"
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
 		timeout: "Hours before task timeout"
-		pickle: "trained pickle for detecting real tumor reads"
-		blocklist: "list of sites to exclude from analysis, gzipped"
 		pullreadsScript: "pull_reads.py executable"
-		qualityscoreScript: "quality_score.py executable"
-		filterAndDetectScript: "filterAndDetect.py executable"
-
 	}
 
 	command <<<
@@ -259,18 +269,54 @@ task detectSNVs {
 			--vcf ~{tumorvcf} \
 			--out PLASMA_VS_TUMOR.tsv
 
+	>>>
+
+	runtime {
+		modules: "~{modules}"
+		memory:  "~{jobMemory} GB"
+		cpu:     "~{threads}"
+		timeout: "~{timeout}"
+	}
+
+	output {
+		File? snvDetectionReads = "PLASMA_VS_TUMOR.tsv" 
+	}
+
+	meta {
+		output_meta: {
+			snvDetectionReads: "Reads with potential for tumor"
+		}
+	}
+}
+
+task calculateQualityScore {
+	input {
+		File? snvDetectionReads
+		String modules
+		Int jobMemory = 64
+		Int threads = 4
+		Int timeout = 20
+		String pickle = "$MRDETECT_ROOT/bin/MRDetectSNV/trained_SVM.pkl"
+		String qualityscoreScript = "$MRDETECT_ROOT/bin/quality_score"
+	}
+
+	parameter_meta {
+		snvDetectionReads: "Reads with potential for tumor"
+		modules: "Required environment modules"
+		jobMemory: "Memory allocated for this job (GB)"
+		threads: "Requested CPU threads"
+		timeout: "Hours before task timeout"
+		pickle: "trained pickle for detecting real tumor reads"
+		qualityscoreScript: "quality_score.py executable"
+	}
+
+	command <<<
+		set -euo pipefail
+
 		~{qualityscoreScript} \
 			--pickle-name ~{pickle} \
-			--detections PLASMA_VS_TUMOR.tsv \
+			--detections ~{snvDetectionReads} \
 			--output_file PLASMA_VS_TUMOR.svm.tsv
-
-		~{filterAndDetectScript} \
-			--vcfid ~{tumorSampleName} --bamid ~{plasmaSampleName} \
-			--svm PLASMA_VS_TUMOR.svm.tsv \
-			--vcf ~{tumorvcf} \
-			--output ./ \
-			--blocklist ~{blocklist} \
-			--troubleshoot
 
 	>>>
 
@@ -283,13 +329,67 @@ task detectSNVs {
 
 	output {
 		File? snvDetectionReadsScored = "PLASMA_VS_TUMOR.svm.tsv" 
-		File? snvDetectionFinalResult = "~{plasmaSampleName}.mrdetect.results.csv"
+	}
+
+	meta {
+		output_meta: {
+			snvDetectionReadsScored: "Reads with potential for tumor, with their scores"
+		}
+	}
+}
+
+task detectSNVs {
+	input {
+		File tumorvcf
+		String? plasmaSampleName 
+		String tumorSampleName = basename(tumorvcf, ".vcf")
+		File? snvDetectionReadsScored
+		String modules
+		Int jobMemory = 64
+		Int threads = 4
+		Int timeout = 20
+		String blocklist = "$PWGS_BLOCKLIST_ROOT/blocklist.vcf.gz"
+		String filterAndDetectScript = "$MRDETECT_ROOT/bin/filterAndDetect"
+	}
+
+	parameter_meta {
+		tumorvcf: "filtered tumor vcf file"
+		plasmaSampleName: "name for plasma sample (from bam)"
+		tumorSampleName: "name for tumour sample (from vcf)"
+		blocklist: "list of sites to exclude from analysis, gzipped"
+		snvDetectionReadsScored: "Reads with potential for tumor, with their scores"
+		modules: "Required environment modules"
+		jobMemory: "Memory allocated for this job (GB)"
+		threads: "Requested CPU threads"
+		timeout: "Hours before task timeout"
+		filterAndDetectScript: "filterAndDetect.py executable"
+	}
+
+	command <<<
+		set -euo pipefail
+
+		~{filterAndDetectScript} \
+			--vcfid ~{tumorSampleName} --bamid ~{plasmaSampleName} \
+			--svm ~{snvDetectionReadsScored} \
+			--vcf ~{tumorvcf} \
+			--output ./ \
+			--blocklist ~{blocklist} \
+	>>>
+
+	runtime {
+		modules: "~{modules}"
+		memory:  "~{jobMemory} GB"
+		cpu:     "~{threads}"
+		timeout: "~{timeout}"
+	}
+
+	output {
+		File? snvDetectionFinalResult = "~{plasmaSampleName}.mrdetect.results.csv" #CHECK?
 		File? snvDetectionVAF = "~{plasmaSampleName}.mrdetect.vaf.txt"
 	}
 
 	meta {
 		output_meta: {
-			snvDetectionReadsScored: "Reads with potential for tumor, with their scores",
 			snvDetectionFinalResult: "Final result and call from SNV detection",
 			snvDetectionVAF: "Variant Allele Frequencies"
 		}
