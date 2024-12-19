@@ -125,7 +125,8 @@ workflow mrdetect {
 			sampleCalls = sampleDetectSNVs.snvDetectionFinalResult,
 			snpcount = filterVCF.snpcount,
 			vafFile = sampleDetectSNVs.snvDetectionVAF,
-			plasmaSampleName = plasmaSampleName
+			plasmaSampleName = plasmaSampleName,
+			tumorSampleName = tumorSampleName
 		}
 	}
 
@@ -373,7 +374,9 @@ task detectSNVs {
 			--svm ~{snvDetectionReadsScored} \
 			--vcf ~{tumorvcf} \
 			--output ./ \
-			--blocklist ~{blocklist} \
+			--blocklist ~{blocklist} 
+		mv ~{plasmaSampleName}.mrdetect.results.csv ~{tumorSampleName}_~{plasmaSampleName}.mrdetect.results.csv
+		mv ~{plasmaSampleName}.mrdetect.vaf.txt ~{tumorSampleName}_~{plasmaSampleName}.mrdetect.vaf.txt
 	>>>
 
 	runtime {
@@ -384,8 +387,8 @@ task detectSNVs {
 	}
 
 	output {
-		File? snvDetectionFinalResult = "~{plasmaSampleName}.mrdetect.results.csv" #CHECK?
-		File? snvDetectionVAF = "~{plasmaSampleName}.mrdetect.vaf.txt"
+		File? snvDetectionFinalResult = "~{tumorSampleName}_~{plasmaSampleName}.mrdetect.results.csv"
+		File? snvDetectionVAF = "~{tumorSampleName}_~{plasmaSampleName}.mrdetect.vaf.txt"
 	}
 
 	meta {
@@ -448,6 +451,7 @@ task snvDetectionSummary {
 		String modules = "mrdetect/1.1.1"
 		String pwgtestscript = "$MRDETECT_ROOT/bin/pwg_test"
 		String? plasmaSampleName
+		String tumorSampleName
 	}
 
 	parameter_meta {
@@ -462,6 +466,7 @@ task snvDetectionSummary {
 		timeout: "Hours before task timeout"
 		pwgtestscript: "executable of pwg_test.R"
 		plasmaSampleName: "name for plasma sample (from bam)"
+		tumorSampleName: "name of tumor sample"
 	}
 
 	command <<<
@@ -477,6 +482,9 @@ task snvDetectionSummary {
 			--candidateSNVsCountFile ~{snpcount} \
 			--vafFile ~{vafFile} \
 			--pval ~{pvalue} 
+		mv ~{plasmaSampleName}.pWGS.svg ~{tumorSampleName}_~{plasmaSampleName}.pWGS.svg
+		mv ~{plasmaSampleName}.HBCs.csv ~{tumorSampleName}_~{plasmaSampleName}.HBCs.csv
+		mv ~{plasmaSampleName}.mrdetect.txt ~{tumorSampleName}_~{plasmaSampleName}.mrdetect.txt
 
 	>>>
 
@@ -488,9 +496,9 @@ task snvDetectionSummary {
 	}
 
 	output {
-		File pWGS_svg = "~{plasmaSampleName}.pWGS.svg"
-		File all_calls = "~{plasmaSampleName}.HBCs.csv"
-		File final_call = "~{plasmaSampleName}.mrdetect.txt"
+		File pWGS_svg = "~{tumorSampleName}_~{plasmaSampleName}.pWGS.svg"
+		File all_calls = "~{tumorSampleName}_~{plasmaSampleName}.HBCs.csv"
+		File final_call = "~{tumorSampleName}_~{plasmaSampleName}.mrdetect.txt"
 	}
 
 	meta {
