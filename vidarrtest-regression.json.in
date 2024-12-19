@@ -161,7 +161,7 @@
             {
                 "metrics_calculate": "@CHECKOUT@/tests/calculate.sh",
                 "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/2.0.0/outputMetrics/CHARMQ_0676_test.metrics",
+                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/2.0.1/output_metrics/CHARMQ_0676_test.metrics",
                 "type": "script"
             }  
         ]
@@ -306,7 +306,7 @@
             {
                 "metrics_calculate": "@CHECKOUT@/tests/filter_only_calculate.sh",
                 "metrics_compare": "@CHECKOUT@/tests/compare.sh",
-                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/2.0.0/outputMetrics/filter_only.metrics",
+                "output_metrics": "/.mounts/labs/gsi/testdata/mrdetect/2.0.1/output_metrics/filter_only_metrics",
                 "type": "script"
             }  
         ]
