@@ -88,115 +88,97 @@ Parameter|Value|Default|Description
 
 ### Outputs
 
-Output | Type | Description
----|---|---
-`snvDetectionResult`|File?|{'description': 'Result from SNV detection incl sample HBCs', 'vidarr_label': 'snvDetectionResult'}
-`pWGS_svg`|File?|{'description': 'pWGS svg', 'vidarr_label': 'pWGS_svg'}
-`snpcount`|File|{'description': 'number of SNPs in vcf after filtering', 'vidarr_label': 'snpcount'}
-`snvDetectionVAF`|File?|{'description': 'VAF from SNV detection for sample', 'vidarr_label': 'snvDetectionVAF'}
-`final_call`|File?|{'description': 'Final file of mrdetect results', 'vidarr_label': 'final_call'}
-`filteredvcf`|File?|Filtered vcf
-
+Output | Type | Description | Labels
+---|---|---|---
+`snvDetectionResult`|File?|Result from SNV detection incl sample HBCs|vidarr_label: snvDetectionResult
+`pWGS_svg`|File?|pWGS svg|vidarr_label: pWGS_svg
+`snpcount`|File|number of SNPs in vcf after filtering|vidarr_label: snpcount
+`snvDetectionVAF`|File?|VAF from SNV detection for sample|vidarr_label: snvDetectionVAF
+`final_call`|File?|Final file of mrdetect results|vidarr_label: final_call
+`filteredvcf`|File?|Filtered vcf|
 
 ## Commands
- This section lists commands run by the MRDetect workflow.
- 
- ### filterVCF
- Performs vcf Filtering, followed by processing of individual `MRDetect` calls. Filters include removing difficult regions (optional), splitting multiallelic loci into one allele per line, removing indels, removing loci by quality metrics (set by `tumorVCFfilter`) and finally removing SNPs by VAF (set by `tumorVAF`).
- 
- <<<
- 		set -euo pipefail
- 
- 		$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorSampleName} --regions-file ~{difficultRegions} ~{tumorvcf} |\
- 		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome} |\
- 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
- 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
- 		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{tumorSampleName}.SNP.vcf
- 
- 		awk '$1 !~ "#" {print}' ~{tumorSampleName}.SNP.vcf | wc -l > ~{tumorSampleName}.SNP.count.txt
- 
- 	>>>
- 
- 
- `MRDetect` proceed across three steps. These tasks are run through for the sample and for all the controls.
- 
- ### pullReads
- 1- `pull_reads` takes any reads in the plasma .bam that corresponds to a SNP in the solid-tumour .vcf. 
- 
- <<<
- 		set -euo pipefail
- 
- 		~{pullreadsScript} \
- 			--bam ~{plasmabam} \
- 			--vcf ~{tumorvcf} \
- 			--out PLASMA_VS_TUMOR.tsv
- 
- 	>>>
- 
- ### calculateQualityScore
- 2- `quality_score` assesses the likelihood that any read is plasma based on the quality score and the trained pickle. 
- 
- <<<
- 		set -euo pipefail
- 
- 		~{qualityscoreScript} \
- 			--pickle-name ~{pickle} \
- 			--detections ~{snvDetectionReads} \
- 			--output_file PLASMA_VS_TUMOR.svm.tsv
- 
- 	>>>
- 
- ### detectSNVs
- 3- `filterAndDetect` keeps reads with high plasma likehood and removed those for which SNPs are in the blocklist. 
- 
- <<<
- 		set -euo pipefail
- 
- 		~{filterAndDetectScript} \
- 			--vcfid ~{tumorSampleName} --bamid ~{plasmaSampleName} \
- 			--svm ~{snvDetectionReadsScored} \
- 			--vcf ~{tumorvcf} \
- 			--output ./ \
- 			--blocklist ~{blocklist} \
- 	>>>
- 
- ### parseControls
- This command processes the list of control files as paired bam/bai files and prints them out for detection.
- 
- <<<
- 		python <<CODE
- 		import os
- 
- 		with open(os.environ.get("~{controlFileList}")) as f:
- 			for line in f:
- 				line = line.rstrip()
- 				tmp = line.split("\t")
- 				r = tmp[0] + "\t" + tmp[1]
- 				print(r)
- 		f.close()
- 		CODE
- 	>>>
- 
- ### snvDetectionSummary
- 
- Finally, `pwg_test.R` will process the controls and the sample to make a final call. 
- 
- <<<
- 		set -euo pipefail
- 
- 		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' > HBCs.csv
- 
- 		cat ~{sampleCalls} HBCs.csv > ~{plasmaSampleName}.HBCs.csv
- 
- 		~{pwgtestscript} \
- 			--sampleName ~{plasmaSampleName} \
- 			--results ~{plasmaSampleName}.HBCs.csv \
- 			--candidateSNVsCountFile ~{snpcount} \
- 			--vafFile ~{vafFile} \
- 			--pval ~{pvalue} 
- 
- 	>>>
- ## Support
+This section lists command(s) run by mrdetect workflow
+
+* Running mrdtect
+
+
+```
+		set -euo pipefail
+
+		$BCFTOOLS_ROOT/bin/bcftools view -s ~{tumorSampleName} --regions-file ~{difficultRegions} ~{tumorvcf} |\
+		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome} |\
+		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
+		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
+		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{tumorSampleName}.SNP.vcf
+
+		awk '$1 !~ "#" {print}' ~{tumorSampleName}.SNP.vcf | wc -l > ~{tumorSampleName}.SNP.count.txt
+
+```
+```
+		set -euo pipefail
+
+		~{pullreadsScript} \
+			--bam ~{plasmabam} \
+			--vcf ~{tumorvcf} \
+			--out PLASMA_VS_TUMOR.tsv
+
+```
+```
+		set -euo pipefail
+
+		~{qualityscoreScript} \
+			--pickle-name ~{pickle} \
+			--detections ~{snvDetectionReads} \
+			--output_file PLASMA_VS_TUMOR.svm.tsv
+
+```
+```
+		set -euo pipefail
+
+		~{filterAndDetectScript} \
+			--vcfid ~{tumorSampleName} --bamid ~{plasmaSampleName} \
+			--svm ~{snvDetectionReadsScored} \
+			--vcf ~{tumorvcf} \
+			--output ./ \
+			--blocklist ~{blocklist} 
+		mv ~{plasmaSampleName}.mrdetect.results.csv ~{tumorSampleName}_~{plasmaSampleName}.mrdetect.results.csv
+		mv ~{plasmaSampleName}.mrdetect.vaf.txt ~{tumorSampleName}_~{plasmaSampleName}.mrdetect.vaf.txt
+```
+```
+		python <<CODE
+		import os
+
+		with open(os.environ.get("~{controlFileList}")) as f:
+			for line in f:
+				line = line.rstrip()
+				tmp = line.split("\t")
+				r = tmp[0] + "\t" + tmp[1]
+				print(r)
+		f.close()
+		CODE
+```
+```
+		set -euo pipefail
+
+		cat ~{sep=' ' controlCalls} | awk '$1 !~ "BAM" {print}' > HBCs.csv
+
+		cat ~{sampleCalls} HBCs.csv > ~{plasmaSampleName}.HBCs.csv
+
+		~{pwgtestscript} \
+			--sampleName ~{plasmaSampleName} \
+			--results ~{plasmaSampleName}.HBCs.csv \
+			--candidateSNVsCountFile ~{snpcount} \
+			--vafFile ~{vafFile} \
+			--pval ~{pvalue} 
+		mv ~{plasmaSampleName}.pWGS.svg ~{tumorSampleName}_~{plasmaSampleName}.pWGS.svg
+		mv ~{plasmaSampleName}.HBCs.csv ~{tumorSampleName}_~{plasmaSampleName}.HBCs.csv
+		mv ~{plasmaSampleName}.mrdetect.txt ~{tumorSampleName}_~{plasmaSampleName}.mrdetect.txt
+
+```
+
+
+## Support
 
 For support, please file an issue on the [Github project](https://github.com/oicr-gsi) or send an email to gsi@oicr.on.ca .
 
