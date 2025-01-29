@@ -100,8 +100,7 @@ Output | Type | Description | Labels
 ## Commands
 This section lists command(s) run by mrdetect workflow
 
-* Running mrdtect
-
+* Running mrdetect
 
 ```
 		set -euo pipefail
@@ -110,9 +109,9 @@ This section lists command(s) run by mrdetect workflow
 		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome} |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
-		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{tumorSampleName}.SNP.vcf
+		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{plasmaSampleName}__~{tumorSampleName}.SNP.vcf
 
-		awk '$1 !~ "#" {print}' ~{tumorSampleName}.SNP.vcf | wc -l > ~{tumorSampleName}.SNP.count.txt
+		awk '$1 !~ "#" {print}' ~{plasmaSampleName}__~{tumorSampleName}.SNP.vcf | wc -l > ~{plasmaSampleName}__~{tumorSampleName}.SNP.count.txt
 
 ```
 ```
@@ -171,12 +170,11 @@ This section lists command(s) run by mrdetect workflow
 			--candidateSNVsCountFile ~{snpcount} \
 			--vafFile ~{vafFile} \
 			--pval ~{pvalue} 
-		mv ~{plasmaSampleName}.pWGS.svg ~{tumorSampleName}_~{plasmaSampleName}.pWGS.svg
-		mv ~{plasmaSampleName}.HBCs.csv ~{tumorSampleName}_~{plasmaSampleName}.HBCs.csv
-		mv ~{plasmaSampleName}.mrdetect.txt ~{tumorSampleName}_~{plasmaSampleName}.mrdetect.txt
+		mv ~{plasmaSampleName}.pWGS.svg ~{tumorSampleName}__~{plasmaSampleName}.pWGS.svg
+		mv ~{plasmaSampleName}.HBCs.csv ~{tumorSampleName}__~{plasmaSampleName}.HBCs.csv
+		mv ~{plasmaSampleName}.mrdetect.txt ~{tumorSampleName}__~{plasmaSampleName}.mrdetect.txt
 
 ```
-
 
 ## Support
 
