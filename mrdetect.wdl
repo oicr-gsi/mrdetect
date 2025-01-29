@@ -34,7 +34,7 @@ workflow mrdetect {
 		tumorSampleName: "ID for WGS tumor sample, must match .vcf header"
 		reference: "genome reference build. Only hg38 supported"
 		instrument: "sequencing instrument used (Illumina NovaSeq X Plus or Illumina NovaSeq 6000)"
-        full_analysis_mode: "Enable full analysis mode with this flag"
+		full_analysis_mode: "Enable full analysis mode with this flag"
 	}
 
 	Map[String,genomeResources] resources = {
@@ -66,7 +66,8 @@ workflow mrdetect {
 		tumorvcf = tumorvcf,
 		tumorvcfindex = tumorvcfindex,
 		tumorSampleName = tumorSampleName,
-		plasmaSampleName = plasmaSampleName
+		plasmaSampleName = plasmaSampleName,
+		full_analysis_mode = full_analysis_mode
 	}
 
 	if(full_analysis_mode) {
@@ -191,6 +192,7 @@ task filterVCF {
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
+		Boolean full_analysis_mode = true
 	}
 
 	parameter_meta {
@@ -206,6 +208,7 @@ task filterVCF {
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
 		timeout: "Hours before task timeout"
+		full_analysis_mode: "Enable full analysis mode with this flag"
 
 	}
 
@@ -216,10 +219,17 @@ task filterVCF {
 		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome} |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
-		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{plasmaSampleName}__~{tumorSampleName}.SNP.vcf
+		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{tumorSampleName}.SNP.vcf
 
-		awk '$1 !~ "#" {print}' ~{plasmaSampleName}__~{tumorSampleName}.SNP.vcf | wc -l > ~{plasmaSampleName}__~{tumorSampleName}.SNP.count.txt
+		awk '$1 !~ "#" {print}' ~{plasmaSampleName}__~{tumorSampleName}.SNP.vcf | wc -l > ~{tumorSampleName}.SNP.count.txt
 
+		if [[ ~{full_analysis_mode} == "true" ]]; then
+			PREFIX="~{plasmaSampleName}__~{tumorSampleName}"
+			mv ~{tumorSampleName}.SNP.vcf $PREFIX.SNP.vcf
+			mv ~{tumorSampleName}.SNP.count.txt $PREFIX.SNP.count.txt
+		else
+			PREFIX="~{tumorSampleName}"
+		fi
 	>>>
 
 	runtime {
@@ -230,8 +240,8 @@ task filterVCF {
 	}
 
 	output {
-		File filteredvcf = "~{plasmaSampleName}__~{tumorSampleName}.SNP.vcf"
-		File snpcount = "~{plasmaSampleName}__~{tumorSampleName}.SNP.count.txt"
+		File filteredvcf = "$PREFIX.SNP.vcf"
+		File snpcount = "$PREFIX.count.txt"
 	}
 
 	meta {
