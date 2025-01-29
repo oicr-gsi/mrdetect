@@ -211,6 +211,7 @@ task filterVCF {
 		full_analysis_mode: "Enable full analysis mode with this flag"
 
 	}
+	String PREFIX = if full_analysis_mode then "~{plasmaSampleName}__~{tumorSampleName}" else "~{tumorSampleName}"
 
 	command <<<
 		set -euo pipefail
@@ -219,17 +220,9 @@ task filterVCF {
 		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome} |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
-		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{tumorSampleName}.SNP.vcf
+		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{PREFIX}.SNP.vcf
 
-		awk '$1 !~ "#" {print}' ~{plasmaSampleName}__~{tumorSampleName}.SNP.vcf | wc -l > ~{tumorSampleName}.SNP.count.txt
-
-		if [[ ~{full_analysis_mode} == "true" ]]; then
-			PREFIX="~{plasmaSampleName}__~{tumorSampleName}"
-			mv ~{tumorSampleName}.SNP.vcf $PREFIX.SNP.vcf
-			mv ~{tumorSampleName}.SNP.count.txt $PREFIX.SNP.count.txt
-		else
-			PREFIX="~{tumorSampleName}"
-		fi
+		awk '$1 !~ "#" {print}' ~{PREFIX}.SNP.vcf | wc -l > ~{PREFIX}.SNP.count.txt
 	>>>
 
 	runtime {
@@ -240,8 +233,8 @@ task filterVCF {
 	}
 
 	output {
-		File filteredvcf = "$PREFIX.SNP.vcf"
-		File snpcount = "$PREFIX.count.txt"
+		File filteredvcf = "~{PREFIX}.SNP.vcf"
+		File snpcount = "~{PREFIX}.SNP.count.txt"
 	}
 
 	meta {
