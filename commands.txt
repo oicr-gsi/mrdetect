@@ -11,10 +11,9 @@ This section lists command(s) run by mrdetect workflow
 		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome} |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
-		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{plasmaSampleName}__~{tumorSampleName}.SNP.vcf
+		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{PREFIX}.SNP.vcf
 
-		awk '$1 !~ "#" {print}' ~{plasmaSampleName}__~{tumorSampleName}.SNP.vcf | wc -l > ~{plasmaSampleName}__~{tumorSampleName}.SNP.count.txt
-
+		awk '$1 !~ "#" {print}' ~{PREFIX}.SNP.vcf | wc -l > ~{PREFIX}.SNP.count.txt
 ```
 ```
 		set -euo pipefail
