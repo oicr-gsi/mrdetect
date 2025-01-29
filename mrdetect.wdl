@@ -378,8 +378,8 @@ task detectSNVs {
 			--vcf ~{tumorvcf} \
 			--output ./ \
 			--blocklist ~{blocklist} 
-		mv ~{plasmaSampleName}.mrdetect.results.csv ~{tumorSampleName}_~{plasmaSampleName}.mrdetect.results.csv
-		mv ~{plasmaSampleName}.mrdetect.vaf.txt ~{tumorSampleName}_~{plasmaSampleName}.mrdetect.vaf.txt
+		mv ~{plasmaSampleName}.mrdetect.results.csv ~{plasmaSampleName}__~{tumorSampleName}.mrdetect.results.csv
+		mv ~{plasmaSampleName}.mrdetect.vaf.txt ~{plasmaSampleName}__~{tumorSampleName}.mrdetect.vaf.txt
 	>>>
 
 	runtime {
@@ -390,8 +390,8 @@ task detectSNVs {
 	}
 
 	output {
-		File? snvDetectionFinalResult = "~{tumorSampleName}_~{plasmaSampleName}.mrdetect.results.csv"
-		File? snvDetectionVAF = "~{tumorSampleName}_~{plasmaSampleName}.mrdetect.vaf.txt"
+		File? snvDetectionFinalResult = "~{plasmaSampleName}__~{tumorSampleName}.mrdetect.results.csv"
+		File? snvDetectionVAF = "~{plasmaSampleName}__~{tumorSampleName}.mrdetect.vaf.txt"
 	}
 
 	meta {
@@ -485,9 +485,9 @@ task snvDetectionSummary {
 			--candidateSNVsCountFile ~{snpcount} \
 			--vafFile ~{vafFile} \
 			--pval ~{pvalue} 
-		mv ~{plasmaSampleName}.pWGS.svg ~{tumorSampleName}__~{plasmaSampleName}.pWGS.svg
-		mv ~{plasmaSampleName}.HBCs.csv ~{tumorSampleName}__~{plasmaSampleName}.HBCs.csv
-		mv ~{plasmaSampleName}.mrdetect.txt ~{tumorSampleName}__~{plasmaSampleName}.mrdetect.txt
+		mv ~{plasmaSampleName}.pWGS.svg ~{plasmaSampleName}__~{tumorSampleName}.pWGS.svg
+		mv ~{plasmaSampleName}.HBCs.csv ~{plasmaSampleName}__~{tumorSampleName}.HBCs.csv
+		mv ~{plasmaSampleName}.mrdetect.txt ~{plasmaSampleName}__~{tumorSampleName}.mrdetect.txt
 
 	>>>
 
@@ -499,9 +499,9 @@ task snvDetectionSummary {
 	}
 
 	output {
-		File pWGS_svg = "~{tumorSampleName}__~{plasmaSampleName}.pWGS.svg"
-		File all_calls = "~{tumorSampleName}__~{plasmaSampleName}.HBCs.csv"
-		File final_call = "~{tumorSampleName}__~{plasmaSampleName}.mrdetect.txt"
+		File pWGS_svg = "~{plasmaSampleName}__~{tumorSampleName}.pWGS.svg"
+		File all_calls = "~{plasmaSampleName}__~{tumorSampleName}.HBCs.csv"
+		File final_call = "~{plasmaSampleName}__~{tumorSampleName}.mrdetect.txt"
 	}
 
 	meta {

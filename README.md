@@ -102,6 +102,7 @@ This section lists command(s) run by mrdetect workflow
 
 * Running mrdetect
 
+
 ```
 		set -euo pipefail
 
@@ -141,8 +142,8 @@ This section lists command(s) run by mrdetect workflow
 			--vcf ~{tumorvcf} \
 			--output ./ \
 			--blocklist ~{blocklist} 
-		mv ~{plasmaSampleName}.mrdetect.results.csv ~{tumorSampleName}_~{plasmaSampleName}.mrdetect.results.csv
-		mv ~{plasmaSampleName}.mrdetect.vaf.txt ~{tumorSampleName}_~{plasmaSampleName}.mrdetect.vaf.txt
+		mv ~{plasmaSampleName}.mrdetect.results.csv ~{plasmaSampleName}__~{tumorSampleName}.mrdetect.results.csv
+		mv ~{plasmaSampleName}.mrdetect.vaf.txt ~{plasmaSampleName}__~{tumorSampleName}.mrdetect.vaf.txt
 ```
 ```
 		python <<CODE
@@ -170,9 +171,9 @@ This section lists command(s) run by mrdetect workflow
 			--candidateSNVsCountFile ~{snpcount} \
 			--vafFile ~{vafFile} \
 			--pval ~{pvalue} 
-		mv ~{plasmaSampleName}.pWGS.svg ~{tumorSampleName}__~{plasmaSampleName}.pWGS.svg
-		mv ~{plasmaSampleName}.HBCs.csv ~{tumorSampleName}__~{plasmaSampleName}.HBCs.csv
-		mv ~{plasmaSampleName}.mrdetect.txt ~{tumorSampleName}__~{plasmaSampleName}.mrdetect.txt
+		mv ~{plasmaSampleName}.pWGS.svg ~{plasmaSampleName}__~{tumorSampleName}.pWGS.svg
+		mv ~{plasmaSampleName}.HBCs.csv ~{plasmaSampleName}__~{tumorSampleName}.HBCs.csv
+		mv ~{plasmaSampleName}.mrdetect.txt ~{plasmaSampleName}__~{tumorSampleName}.mrdetect.txt
 
 ```
 
