@@ -1,6 +1,7 @@
 {
     "names": [
-        "mrdetect",
+        "mrDetect",
+	"mrdetect",
         "mrdetect_filter_only"
     ],
     "wdl": "mrdetect.wdl"
