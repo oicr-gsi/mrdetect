@@ -34,7 +34,7 @@ workflow mrdetect {
 		tumorSampleName: "ID for WGS tumor sample, must match .vcf header"
 		reference: "genome reference build. Only hg38 supported"
 		instrument: "sequencing instrument used (Illumina NovaSeq X Plus or Illumina NovaSeq 6000)"
-        full_analysis_mode: "Enable full analysis mode with this flag"
+		full_analysis_mode: "Enable full analysis mode with this flag"
 	}
 
 	Map[String,genomeResources] resources = {
@@ -65,7 +65,9 @@ workflow mrdetect {
 		difficultRegions = resources[reference].filterVCF_difficultRegions,
 		tumorvcf = tumorvcf,
 		tumorvcfindex = tumorvcfindex,
-		tumorSampleName = tumorSampleName
+		tumorSampleName = tumorSampleName,
+		plasmaSampleName = plasmaSampleName,
+		full_analysis_mode = full_analysis_mode
 	}
 
 	if(full_analysis_mode) {
@@ -181,6 +183,7 @@ task filterVCF {
 		File tumorvcf
 		File tumorvcfindex
 		String tumorSampleName
+		String? plasmaSampleName
 		String tumorVCFfilter = "FILTER~'haplotype' | FILTER~'clustered_events' | FILTER~'slippage' | FILTER~'weak_evidence' | FILTER~'strand_bias' | FILTER~'position' | FILTER~'normal_artifact' | FILTER~'multiallelic' | FILTER~'map_qual' | FILTER~'germline' | FILTER~'fragment' | FILTER~'contamination' | FILTER~'base_qual'"
 		String tumorVAF = "0.1"
 		String genome 
@@ -189,12 +192,14 @@ task filterVCF {
 		Int jobMemory = 64
 		Int threads = 4
 		Int timeout = 10
+		Boolean full_analysis_mode = true
 	}
 
 	parameter_meta {
 		tumorvcf: "tumor vcf file, bgzip"
 		tumorvcfindex: "tumor vcf index file"
 		tumorSampleName: "ID for WGS tumor sample"
+		plasmaSampleName: "ID for plasma Sample Name"
 		tumorVCFfilter: "set of filter calls to exclude in tumor VCF (any line with these flags will be excluded"
 		tumorVAF: "Variant Allele Frequency for tumor VCF"
 		genome: "Path to loaded genome .fa"
@@ -203,8 +208,10 @@ task filterVCF {
 		jobMemory: "Memory allocated for this job (GB)"
 		threads: "Requested CPU threads"
 		timeout: "Hours before task timeout"
+		full_analysis_mode: "Enable full analysis mode with this flag"
 
 	}
+	String PREFIX = if full_analysis_mode then "~{plasmaSampleName}__~{tumorSampleName}" else "~{tumorSampleName}"
 
 	command <<<
 		set -euo pipefail
@@ -213,10 +220,9 @@ task filterVCF {
 		$BCFTOOLS_ROOT/bin/bcftools norm --multiallelics - --fasta-ref ~{genome} |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -i "TYPE='snps'" |\
 		$BCFTOOLS_ROOT/bin/bcftools filter -e "~{tumorVCFfilter}" |\
-		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{tumorSampleName}.SNP.vcf
+		$BCFTOOLS_ROOT/bin/bcftools filter -i "(FORMAT/AD[0:1])/(FORMAT/AD[0:0]+FORMAT/AD[0:1]) >= ~{tumorVAF}" > ~{PREFIX}.SNP.vcf
 
-		awk '$1 !~ "#" {print}' ~{tumorSampleName}.SNP.vcf | wc -l > ~{tumorSampleName}.SNP.count.txt
-
+		awk '$1 !~ "#" {print}' ~{PREFIX}.SNP.vcf | wc -l > ~{PREFIX}.SNP.count.txt
 	>>>
 
 	runtime {
@@ -227,8 +233,8 @@ task filterVCF {
 	}
 
 	output {
-		File filteredvcf = "~{tumorSampleName}.SNP.vcf"
-		File snpcount = "~{tumorSampleName}.SNP.count.txt"
+		File filteredvcf = "~{PREFIX}.SNP.vcf"
+		File snpcount = "~{PREFIX}.SNP.count.txt"
 	}
 
 	meta {
@@ -375,8 +381,8 @@ task detectSNVs {
 			--vcf ~{tumorvcf} \
 			--output ./ \
 			--blocklist ~{blocklist} 
-		mv ~{plasmaSampleName}.mrdetect.results.csv ~{tumorSampleName}_~{plasmaSampleName}.mrdetect.results.csv
-		mv ~{plasmaSampleName}.mrdetect.vaf.txt ~{tumorSampleName}_~{plasmaSampleName}.mrdetect.vaf.txt
+		mv ~{plasmaSampleName}.mrdetect.results.csv ~{plasmaSampleName}__~{tumorSampleName}.mrdetect.results.csv
+		mv ~{plasmaSampleName}.mrdetect.vaf.txt ~{plasmaSampleName}__~{tumorSampleName}.mrdetect.vaf.txt
 	>>>
 
 	runtime {
@@ -387,8 +393,8 @@ task detectSNVs {
 	}
 
 	output {
-		File? snvDetectionFinalResult = "~{tumorSampleName}_~{plasmaSampleName}.mrdetect.results.csv"
-		File? snvDetectionVAF = "~{tumorSampleName}_~{plasmaSampleName}.mrdetect.vaf.txt"
+		File? snvDetectionFinalResult = "~{plasmaSampleName}__~{tumorSampleName}.mrdetect.results.csv"
+		File? snvDetectionVAF = "~{plasmaSampleName}__~{tumorSampleName}.mrdetect.vaf.txt"
 	}
 
 	meta {
@@ -482,9 +488,9 @@ task snvDetectionSummary {
 			--candidateSNVsCountFile ~{snpcount} \
 			--vafFile ~{vafFile} \
 			--pval ~{pvalue} 
-		mv ~{plasmaSampleName}.pWGS.svg ~{tumorSampleName}_~{plasmaSampleName}.pWGS.svg
-		mv ~{plasmaSampleName}.HBCs.csv ~{tumorSampleName}_~{plasmaSampleName}.HBCs.csv
-		mv ~{plasmaSampleName}.mrdetect.txt ~{tumorSampleName}_~{plasmaSampleName}.mrdetect.txt
+		mv ~{plasmaSampleName}.pWGS.svg ~{plasmaSampleName}__~{tumorSampleName}.pWGS.svg
+		mv ~{plasmaSampleName}.HBCs.csv ~{plasmaSampleName}__~{tumorSampleName}.HBCs.csv
+		mv ~{plasmaSampleName}.mrdetect.txt ~{plasmaSampleName}__~{tumorSampleName}.mrdetect.txt
 
 	>>>
 
@@ -496,9 +502,9 @@ task snvDetectionSummary {
 	}
 
 	output {
-		File pWGS_svg = "~{tumorSampleName}_~{plasmaSampleName}.pWGS.svg"
-		File all_calls = "~{tumorSampleName}_~{plasmaSampleName}.HBCs.csv"
-		File final_call = "~{tumorSampleName}_~{plasmaSampleName}.mrdetect.txt"
+		File pWGS_svg = "~{plasmaSampleName}__~{tumorSampleName}.pWGS.svg"
+		File all_calls = "~{plasmaSampleName}__~{tumorSampleName}.HBCs.csv"
+		File final_call = "~{plasmaSampleName}__~{tumorSampleName}.mrdetect.txt"
 	}
 
 	meta {
