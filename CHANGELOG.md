@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Update HBC BAM files to version 2.0
 
-## [1.1.1] -2024-08-01
+## [1.1.1] - 2024-08-01
 ### Fixed
 - Fixed output file name issues. [GRD-809](https://jira.oicr.on.ca/browse/GRD-809)
 
