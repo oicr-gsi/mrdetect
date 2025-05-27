@@ -4,13 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.3.2] - 2025-05-26
+## [1.4.2] - 2025-05-26
 - Re-deployment to enable labels for optional outputs
 - [GRD-948](https://jira.oicr.on.ca/browse/GRD-948)
 
-## [1.3.2] - 2025-01-29
+## [1.4.1] - 2025-01-29
 ### Changed
 - Changed all output file name to have both plasma and tumor sample name prefix
+
+## [1.4.0] - 2025-02-05
+### Added
+- mrDetect name added to vidarrbuild file
 
 ## [1.3.1] - 2025-01-20
 ### Changed
